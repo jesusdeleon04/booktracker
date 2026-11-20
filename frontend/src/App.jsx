@@ -5,6 +5,7 @@ import { RefreshCw } from 'lucide-react'
 import { useStore } from './store/useStore'
 import { usePoetry } from './store/usePoetry'
 import { api } from './lib/api'
+import { supabase } from './lib/supabase'
 import LoginScreen from './components/auth/LoginScreen'
 import AppShell, { Wordmark } from './components/layout/AppShell'
 import Toaster from './components/ui/Toaster'
@@ -95,6 +96,13 @@ export default function App() {
     if (lastUser.current !== null && lastUser.current !== current) window.location.assign('/')
     lastUser.current = current
   }, [cfg, authStatus, userId])
+
+  // A stale or invalid session must never strand the user on an error screen: drop it and show the login.
+  useEffect(() => {
+    if (cfg?.authRequired && status === 'error' && /sesi[oó]n/i.test(bootError || '')) {
+      Promise.resolve(supabase?.auth.signOut({ scope: 'local' })).finally(() => window.location.replace('/'))
+    }
+  }, [cfg, status, bootError])
 
   // Public page: reachable without logging in (Google asks for a privacy-policy link).
   if (location.pathname === '/privacidad') return <Suspense fallback={null}><Privacy /></Suspense>
