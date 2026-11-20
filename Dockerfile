@@ -1,5 +1,5 @@
 # Booktracker: React frontend built once, served by the Flask API (one service).
-FROM node:22-alpine AS web
+FROM node:24-slim AS web
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm ci
