@@ -1,0 +1,908 @@
+@import "tailwindcss";
+@import "@fontsource/cormorant-garamond/400.css";
+@import "@fontsource/cormorant-garamond/500.css";
+@import "@fontsource/cormorant-garamond/600.css";
+@import "@fontsource/cormorant-garamond/400-italic.css";
+@import "@fontsource/cormorant-garamond/500-italic.css";
+@import "@fontsource-variable/eb-garamond/wght.css";
+@import "@fontsource-variable/eb-garamond/wght-italic.css";
+@import "@fontsource-variable/instrument-sans/index.css";
+@import "@fontsource/courier-prime/400.css";
+@import "@fontsource/courier-prime/700.css";
+@import "@fontsource-variable/caveat/index.css";
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Booktracker — "a reading room at night"
+   References: a lamp-lit desk of dark walnut, cream pages and fountain-pen
+   ink, a sepia writer's den full of handwritten sheets, an attic library
+   under string lights, a garden at blue hour.
+
+   · Noche (default): walnut & espresso, parchment text, lamplight amber.
+   · Papel: the pages themselves — cream paper, brown-black ink.
+   Lamplight amber = reading now · moss = read · blue hour = want to read.
+   ───────────────────────────────────────────────────────────────────────── */
+:root {
+  --bg: #140e0a;
+  --surface: #1c1510;
+  --surface-2: #251c15;
+  --surface-3: #31251b;
+  --line: rgba(243, 231, 211, 0.085);
+  --line-strong: rgba(243, 231, 211, 0.17);
+  --text: #f3e7d3;
+  --text-2: #c4b19a;
+  --text-3: #8c7964;
+  --accent: #e9a34f;
+  --accent-2: #f4bb6c;
+  --accent-ink: #1e1208;
+  --accent-soft: rgba(233, 163, 79, 0.13);
+  --brass: #dbb571;
+  --brass-soft: rgba(219, 181, 113, 0.13);
+  --sage: #a1b47f;
+  --sage-soft: rgba(161, 180, 127, 0.13);
+  --dusk: #93abd4;
+  --dusk-soft: rgba(147, 171, 212, 0.14);
+  --ember: #d4693f;
+  /* the physical page: stays cream in both themes */
+  --paper: #f2e8d5;
+  --paper-2: #e9dcc3;
+  --paper-ink: #2a1e15;
+  --paper-ink-2: #6b5643;
+  --paper-rule: rgba(84, 110, 150, 0.22);
+  --lamp: rgba(244, 176, 88, 0.2);
+  --vignette: rgba(4, 2, 1, 0.62);
+  --wood: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='900'%3E%3Cfilter id='w' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.0025 0.14' numOctaves='2' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.55 0 0 0 0 0.37 0 0 0 0 0.22 0.3 0 0 0 -0.135'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23w)'/%3E%3C/svg%3E");
+  --shadow-book: 0 1px 1px rgba(0, 0, 0, 0.3), 0 12px 26px -10px rgba(0, 0, 0, 0.8),
+    0 30px 50px -28px rgba(0, 0, 0, 0.85);
+  --shadow-pop: 0 28px 70px -24px rgba(0, 0, 0, 0.9);
+  --glow: 0 0 0 1px rgba(255, 210, 140, 0.18), 0 10px 30px -8px rgba(233, 163, 79, 0.55);
+  --grain-opacity: 0.08;
+  --overlay: rgba(10, 6, 3, 0.74);
+  color-scheme: dark;
+}
+
+[data-theme="paper"] {
+  --bg: #ece2cf;
+  --surface: #f6efe1;
+  --surface-2: #e7dbc4;
+  --surface-3: #dacbb0;
+  --line: rgba(60, 40, 22, 0.11);
+  --line-strong: rgba(60, 40, 22, 0.22);
+  --text: #241a12;
+  --text-2: #5d4c3c;
+  --text-3: #8b7861;
+  --accent: #a65d19;
+  --accent-2: #8c4c11;
+  --accent-ink: #fff7ea;
+  --accent-soft: rgba(166, 93, 25, 0.11);
+  --brass: #94702c;
+  --brass-soft: rgba(148, 112, 44, 0.12);
+  --sage: #5c7240;
+  --sage-soft: rgba(92, 114, 64, 0.12);
+  --dusk: #3e5985;
+  --dusk-soft: rgba(62, 89, 133, 0.11);
+  --ember: #b04f27;
+  --paper: #fbf6ec;
+  --paper-2: #f1e7d5;
+  --lamp: rgba(233, 163, 79, 0.16);
+  --vignette: rgba(90, 60, 30, 0.16);
+  --wood: none;
+  --shadow-book: 0 1px 1px rgba(60, 40, 20, 0.2), 0 12px 24px -10px rgba(60, 40, 20, 0.5),
+    0 28px 44px -26px rgba(60, 40, 20, 0.5);
+  --shadow-pop: 0 26px 60px -28px rgba(60, 40, 20, 0.55);
+  --glow: 0 8px 22px -10px rgba(166, 93, 25, 0.55);
+  --grain-opacity: 0.11;
+  --overlay: rgba(45, 30, 18, 0.42);
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--text);
+  --color-ink-2: var(--text-2);
+  --color-ink-3: var(--text-3);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-brass: var(--brass);
+  --color-brass-soft: var(--brass-soft);
+  --color-sage: var(--sage);
+  --color-sage-soft: var(--sage-soft);
+  --color-dusk: var(--dusk);
+  --color-dusk-soft: var(--dusk-soft);
+  --color-ember: var(--ember);
+  --color-paper: var(--paper);
+  --color-paper-ink: var(--paper-ink);
+  --font-display: "Cormorant Garamond", "EB Garamond Variable", Georgia, serif;
+  --font-serif: "EB Garamond Variable", Georgia, serif;
+  --font-sans: "Instrument Sans Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Courier Prime", "Courier New", ui-monospace, monospace;
+  --font-hand: "Caveat Variable", "Segoe Print", cursive;
+}
+
+@theme {
+  --ease-book: cubic-bezier(0.2, 0.75, 0.2, 1);
+  --breakpoint-xs: 26rem;
+}
+
+/* ─── Base (layered so utilities can override) ──────────────────────── */
+@layer base {
+  html {
+    background: var(--bg);
+    -webkit-tap-highlight-color: transparent;
+    scrollbar-gutter: stable;
+  }
+
+  /* A desk lamp above the page, the room falling into shadow at the edges,
+     and the grain of the walnut desk underneath. */
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background:
+      radial-gradient(1100px 620px at 50% -180px, var(--lamp), transparent 70%),
+      radial-gradient(140% 100% at 50% 30%, transparent 52%, var(--vignette) 100%),
+      var(--wood),
+      var(--bg);
+    background-attachment: fixed;
+    background-size: auto, auto, 100% 100%, auto;
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Paper grain over everything (very subtle) */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 100;
+    opacity: var(--grain-opacity);
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  ::selection {
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--surface-3) transparent;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  img {
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+}
+
+/* ─── Typography ───────────────────────────────────────────────────────── */
+@layer components {
+  /* Book typography for titles: a classic Garamond, sized up to read well. */
+  .font-display {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size-adjust: 0.44;
+    letter-spacing: -0.005em;
+    font-variant-numeric: lining-nums proportional-nums;
+  }
+
+  /* Italic emphasis inside headings, warmed by the lamp. */
+  .display-wonk {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 500;
+  }
+
+  /* Typewriter labels. */
+  .kicker {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+
+  /* Printed page text (synopses, reviews). */
+  .prose-book {
+    font-family: var(--font-serif);
+    font-size: 1.08rem;
+    line-height: 1.68;
+    color: var(--text-2);
+  }
+  .prose-book p + p {
+    margin-top: 0.9em;
+  }
+
+  /* Fountain-pen handwriting for marginalia. */
+  .font-hand {
+    font-family: var(--font-hand);
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
+}
+
+/* ─── Components ───────────────────────────────────────────────────────── */
+@layer components {
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 2.5rem;
+    padding: 0 1.05rem;
+    border-radius: 999px;
+    font-weight: 550;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    border: 1px solid var(--line-strong);
+    color: var(--text);
+    background: transparent;
+    transition:
+      background-color 0.2s var(--ease-book),
+      border-color 0.2s var(--ease-book),
+      box-shadow 0.3s var(--ease-book),
+      transform 0.15s var(--ease-book),
+      color 0.2s;
+  }
+  .btn:hover {
+    background: var(--surface-2);
+    border-color: var(--line-strong);
+  }
+  .btn:active {
+    transform: scale(0.97);
+  }
+  .btn:disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  /* Lamplight button: it glows a little. */
+  .btn-primary {
+    background: var(--accent);
+    border-color: transparent;
+    color: var(--accent-ink);
+    box-shadow: var(--glow);
+  }
+  .btn-primary:hover {
+    background: var(--accent-2);
+    border-color: transparent;
+  }
+  .btn-ink {
+    background: var(--text);
+    color: var(--bg);
+    border-color: transparent;
+  }
+  .btn-ink:hover {
+    background: color-mix(in oklab, var(--text) 86%, var(--bg));
+  }
+  .btn-ghost {
+    border-color: transparent;
+  }
+  .btn-sm {
+    height: 2rem;
+    padding: 0 0.8rem;
+    font-size: 0.82rem;
+  }
+  .btn-icon {
+    width: 2.5rem;
+    padding: 0;
+  }
+  .btn-icon.btn-sm {
+    width: 2rem;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    height: 1.9rem;
+    padding: 0 0.8rem;
+    border-radius: 999px;
+    border: 1px solid var(--line-strong);
+    font-size: 0.82rem;
+    color: var(--text-2);
+    transition: all 0.2s var(--ease-book);
+    white-space: nowrap;
+  }
+  .chip:hover {
+    color: var(--text);
+    border-color: color-mix(in oklab, var(--text) 35%, transparent);
+  }
+  .chip[data-active="true"] {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+  }
+
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.18rem 0.6rem;
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: var(--surface-2);
+    color: var(--text-2);
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 1.25rem;
+  }
+
+  .field {
+    width: 100%;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 0.8rem;
+    padding: 0.65rem 0.9rem;
+    color: var(--text);
+    font-size: 0.95rem;
+    transition: border-color 0.2s, background-color 0.2s;
+  }
+  .field::placeholder {
+    color: var(--text-3);
+  }
+  .field:focus {
+    outline: none;
+    border-color: color-mix(in oklab, var(--accent) 60%, transparent);
+    background: var(--surface);
+  }
+  textarea.field {
+    resize: vertical;
+    min-height: 7rem;
+    line-height: 1.6;
+  }
+  select.field {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.8rem center;
+    padding-right: 2rem;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--line);
+  }
+
+  /* A cream sheet of paper on the dark desk (both themes). Ink colours are
+     re-scoped so every utility inside reads as brown-black ink on the page. */
+  .paper-sheet {
+    --text: var(--paper-ink);
+    --text-2: var(--paper-ink-2);
+    --text-3: #8f7a62;
+    --line: rgba(60, 40, 22, 0.14);
+    --line-strong: rgba(60, 40, 22, 0.26);
+    --surface: rgba(60, 40, 22, 0.04);
+    --surface-2: rgba(60, 40, 22, 0.07);
+    --surface-3: rgba(60, 40, 22, 0.11);
+    --accent: #a65d19;
+    --accent-2: #8c4c11;
+    --accent-ink: #fff7ea;
+    --accent-soft: rgba(166, 93, 25, 0.1);
+    --bg: var(--paper);
+    position: relative;
+    background:
+      radial-gradient(120% 80% at 0% 0%, rgba(255, 255, 255, 0.35), transparent 60%),
+      linear-gradient(180deg, var(--paper), var(--paper-2));
+    color: var(--paper-ink);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.4) inset,
+      0 18px 40px -18px rgba(0, 0, 0, 0.65),
+      0 2px 6px rgba(0, 0, 0, 0.25);
+  }
+
+  /* Ruled journal page with a margin line, like a fountain-pen notebook. */
+  .journal {
+    --rule: 2rem;
+    background-color: var(--paper);
+    background-image:
+      linear-gradient(90deg, transparent 2.9rem, rgba(190, 80, 60, 0.28) 2.9rem, rgba(190, 80, 60, 0.28) calc(2.9rem + 1px), transparent calc(2.9rem + 1px)),
+      repeating-linear-gradient(180deg, transparent 0, transparent calc(var(--rule) - 1px), var(--paper-rule) calc(var(--rule) - 1px), var(--paper-rule) var(--rule));
+    background-position: 0 0, 0 0.9rem;
+    color: var(--paper-ink);
+    font-family: var(--font-hand);
+    font-size: 1.32rem;
+    line-height: var(--rule);
+    padding: 0.9rem 1.2rem 0.9rem 3.6rem;
+    border-radius: 6px 10px 10px 6px;
+    box-shadow:
+      0 18px 40px -20px rgba(0, 0, 0, 0.7),
+      0 2px 6px rgba(0, 0, 0, 0.25);
+    border: none;
+    resize: vertical;
+    width: 100%;
+    outline: none;
+  }
+  .journal::placeholder {
+    color: rgba(42, 30, 21, 0.38);
+  }
+  .journal:focus {
+    box-shadow:
+      0 0 0 2px color-mix(in oklab, var(--accent) 70%, transparent),
+      0 18px 40px -20px rgba(0, 0, 0, 0.7);
+  }
+}
+
+/* ─── Book covers: physical objects, not thumbnails ────────────────────── */
+.book {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  border-radius: 3px 6px 6px 3px;
+  overflow: hidden;
+  background: var(--surface-3);
+  box-shadow: var(--shadow-book);
+  isolation: isolate;
+  transform: translateZ(0);
+}
+.book > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* spine crease + page gloss + a touch of lamplight */
+.book::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.16) 0%,
+      rgba(0, 0, 0, 0.3) 2.2%,
+      rgba(255, 255, 255, 0.08) 4%,
+      transparent 8%,
+      transparent 92%,
+      rgba(0, 0, 0, 0.14) 100%
+    ),
+    linear-gradient(180deg, rgba(255, 220, 160, 0.08), transparent 35%);
+  border-radius: inherit;
+}
+.book-lift {
+  transition:
+    transform 0.45s var(--ease-book),
+    box-shadow 0.45s var(--ease-book);
+}
+.group:hover .book-lift,
+.book-lift:hover {
+  transform: translateY(-6px) rotate(-0.6deg);
+  box-shadow:
+    var(--shadow-book),
+    0 30px 50px -20px rgba(0, 0, 0, 0.55),
+    0 -10px 40px -20px rgba(244, 176, 88, 0.35);
+}
+
+.shimmer {
+  background: linear-gradient(100deg, var(--surface-2) 30%, var(--surface-3) 50%, var(--surface-2) 70%);
+  background-size: 300% 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+@keyframes shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+
+/* Sepia photographs (the writer's den) */
+.sepia-photo {
+  filter: sepia(0.55) saturate(0.85) brightness(0.8) contrast(1.05);
+}
+
+/* String lights: glowing bulbs that breathe at their own pace. */
+.bulb {
+  animation: bulb-breathe var(--dur, 3.4s) ease-in-out var(--delay, 0s) infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes bulb-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* Horizontal shelves */
+.shelf-scroll {
+  display: flex;
+  gap: 1.25rem;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  padding: 0.5rem 1rem 1.5rem;
+  margin: -0.5rem -1rem 0;
+  scroll-padding-inline: 1rem;
+}
+.shelf-scroll::-webkit-scrollbar {
+  display: none;
+}
+.shelf-scroll > * {
+  scroll-snap-align: start;
+  flex-shrink: 0;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Range input (preference sliders) */
+input[type="range"].slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 99px;
+  background: linear-gradient(90deg, var(--line-strong), var(--line-strong));
+  outline: none;
+}
+input[type="range"].slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 4px solid var(--bg);
+  box-shadow: 0 0 0 1px var(--line-strong), 0 0 14px rgba(233, 163, 79, 0.5);
+  cursor: grab;
+}
+input[type="range"].slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 4px solid var(--bg);
+  cursor: grab;
+}
+
+/* Safe area for the mobile tab bar */
+.pb-safe {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.5rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ═════════════════════════════════════════════════════════════════════════
+   Writer's Studio — typewriter, manuscripts, ink stamps
+   ═════════════════════════════════════════════════════════════════════════ */
+:root {
+  --sheet: #f3e9d4;
+  --sheet-2: #ece0c7;
+  --typed: #2a1f17;
+  --ribbon: #a8321f; /* the red half of a typewriter ribbon */
+}
+
+/* A typed manuscript page: cream paper, fibres, softly darker edges. */
+.manuscript {
+  background-color: var(--sheet);
+  background-image:
+    radial-gradient(130% 100% at 50% 40%, transparent 60%, rgba(120, 85, 40, 0.18) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.33 0 0 0 0 0.2 0 0 0 0.09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)'/%3E%3C/svg%3E");
+  color: var(--typed);
+}
+
+.typed {
+  font-family: var(--font-mono);
+  color: var(--typed);
+  text-shadow: 0 0 0.6px rgba(42, 31, 23, 0.45);
+}
+
+/* Rubber stamp in ribbon-red ink, slightly crooked. */
+.stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.12rem 0.5rem;
+  border: 1.5px solid currentColor;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transform: rotate(-2.5deg);
+  mix-blend-mode: multiply;
+  opacity: 0.88;
+}
+
+/* The typewriter platen the sheet comes out of. */
+.platen {
+  position: relative;
+  height: 30px;
+  border-radius: 15px;
+  background:
+    linear-gradient(180deg, #4a3b31 0%, #1b1410 38%, #0d0907 60%, #2b211b 100%);
+  box-shadow:
+    0 10px 24px -8px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+.platen::before,
+.platen::after {
+  content: "";
+  position: absolute;
+  top: -5px;
+  width: 26px;
+  height: 40px;
+  border-radius: 7px;
+  background: linear-gradient(180deg, #c9b48a, #6d5a3c 55%, #3b2f20);
+  box-shadow: 0 6px 14px -6px rgba(0, 0, 0, 0.8);
+}
+.platen::before {
+  left: -18px;
+}
+.platen::after {
+  right: -18px;
+}
+
+/* The sheet being typed on. */
+.typewriter-sheet {
+  position: relative;
+  box-shadow:
+    0 2px 0 rgba(255, 255, 255, 0.35) inset,
+    0 40px 80px -40px rgba(0, 0, 0, 0.85),
+    0 4px 14px rgba(0, 0, 0, 0.35);
+}
+
+.typewriter-input {
+  display: block;
+  width: 100%;
+  border: 0;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  background: transparent;
+  font-family: var(--font-mono);
+  color: var(--typed);
+  caret-color: var(--ribbon);
+  text-shadow: 0 0 0.6px rgba(42, 31, 23, 0.4);
+  letter-spacing: 0.01em;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  tab-size: 4;
+}
+.typewriter-input::placeholder {
+  color: rgba(42, 31, 23, 0.32);
+  text-shadow: none;
+}
+.typewriter-input::selection {
+  background: rgba(233, 163, 79, 0.38);
+}
+@supports (field-sizing: content) {
+  .typewriter-input.autosize {
+    field-sizing: content;
+  }
+}
+
+/* Current-line guide behind the text: like the line indicator on a typewriter. */
+.line-guide {
+  position: absolute;
+  left: -1.5rem;
+  right: -1.5rem;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(233, 163, 79, 0.14) 6%, rgba(233, 163, 79, 0.14) 94%, transparent);
+  border-radius: 3px;
+  transition: top 90ms ease-out, opacity 200ms;
+}
+
+/* Chrome that fades away in focus mode */
+.studio-chrome {
+  transition: opacity 0.45s var(--ease-book), transform 0.45s var(--ease-book);
+}
+.studio-focus .studio-chrome:not(:hover):not(:focus-within) {
+  opacity: 0;
+}
+.studio-focus .studio-chrome.studio-top:not(:hover):not(:focus-within) {
+  transform: translateY(-8px);
+}
+
+/* ─── Poetry library: the garden at blue hour ─────────────────────────────
+   The section keeps the desk-and-lamplight identity but turns towards the
+   fourth reference photo: dusk-blue sky, string lights, paper under moonlight. */
+@layer components {
+  .dusk-sky {
+    background:
+      radial-gradient(90% 70% at 50% 0%, rgba(147, 171, 212, 0.26), transparent 70%),
+      radial-gradient(60% 50% at 85% 10%, rgba(233, 163, 79, 0.1), transparent 70%),
+      linear-gradient(180deg, rgba(26, 36, 58, 0.55), transparent 85%);
+  }
+  [data-theme="paper"] .dusk-sky {
+    background:
+      radial-gradient(90% 70% at 50% 0%, rgba(62, 89, 133, 0.16), transparent 70%),
+      linear-gradient(180deg, rgba(62, 89, 133, 0.08), transparent 85%);
+  }
+  .kicker-dusk {
+    color: var(--dusk);
+  }
+
+  /* Portrait in an oval frame, gently toned to sit on the desk. */
+  .portrait {
+    position: relative;
+    overflow: hidden;
+    border-radius: 999px;
+    background: linear-gradient(160deg, var(--dusk-soft), var(--surface-2));
+    box-shadow: 0 0 0 1px var(--line-strong), 0 14px 30px -16px rgba(0, 0, 0, 0.75);
+  }
+  .portrait img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 22%;
+    filter: sepia(0.28) saturate(0.85) contrast(1.02);
+  }
+
+  /* The poem sheet: paper variants chosen by the reader. */
+  .poem-sheet {
+    --poem-ink: #2a1e15;
+    --poem-soft: #7a6650;
+    --poem-accent: #9c5a22;
+    position: relative;
+    color: var(--poem-ink);
+    border-radius: 6px;
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.35) inset,
+      0 30px 60px -30px rgba(0, 0, 0, 0.8),
+      0 3px 8px rgba(0, 0, 0, 0.22);
+  }
+  .poem-paper-crema {
+    background:
+      radial-gradient(120% 80% at 0% 0%, rgba(255, 255, 255, 0.4), transparent 60%),
+      linear-gradient(180deg, #f6eedd, #ece0c7);
+  }
+  .poem-paper-marfil {
+    background: linear-gradient(180deg, #fdfaf3, #f4efe4);
+    --poem-ink: #22201c;
+    --poem-soft: #77705f;
+    --poem-accent: #3e5985;
+  }
+  .poem-paper-sepia {
+    background:
+      radial-gradient(130% 100% at 50% 40%, transparent 55%, rgba(120, 80, 30, 0.22) 100%),
+      linear-gradient(180deg, #ecd9b6, #dfc59a);
+    --poem-ink: #3a2513;
+    --poem-soft: #7b5a36;
+    --poem-accent: #8a3f1c;
+  }
+  .poem-paper-pergamino {
+    background-color: #efe2c4;
+    background-image:
+      radial-gradient(130% 100% at 50% 40%, transparent 60%, rgba(110, 70, 25, 0.25) 100%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.32 0 0 0 0 0.16 0 0 0 0.14 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)'/%3E%3C/svg%3E");
+    --poem-ink: #33210f;
+    --poem-soft: #7a5b38;
+    --poem-accent: #8a3f1c;
+  }
+  .poem-paper-noche {
+    background:
+      radial-gradient(80% 50% at 50% 0%, rgba(147, 171, 212, 0.22), transparent 70%),
+      linear-gradient(180deg, #1b2438, #121826);
+    --poem-ink: #e6ebf5;
+    --poem-soft: #93a3c0;
+    --poem-accent: #e9b56a;
+    box-shadow: 0 0 0 1px rgba(147, 171, 212, 0.18), 0 30px 60px -30px rgba(0, 0, 0, 0.9);
+  }
+
+  .poem-title {
+    font-family: var(--font-display);
+    font-weight: 500;
+    line-height: 1.05;
+    letter-spacing: -0.005em;
+    text-wrap: balance;
+  }
+  .poem-meta {
+    color: var(--poem-soft);
+  }
+  .poem-accent {
+    color: var(--poem-accent);
+  }
+  .poem-verse {
+    font-variant-numeric: lining-nums;
+    hyphens: none;
+  }
+  /* Each verse is a block with a hanging indent so a wrapped line reads as a
+     continuation, never as a new verse. */
+  .poem-line {
+    padding-left: calc(var(--indent, 0ch) + 1.8em);
+    text-indent: -1.8em;
+    min-height: 1em;
+    overflow-wrap: anywhere;
+  }
+  .poem-stanza + .poem-stanza {
+    margin-top: 1.05em;
+  }
+  .poem-ornament {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    color: var(--poem-accent);
+  }
+  .poem-ornament::before,
+  .poem-ornament::after {
+    content: "";
+    height: 1px;
+    width: 3rem;
+    background: currentColor;
+    opacity: 0.55;
+  }
+
+  /* Rights seal, a small stamp in the colour of the status. */
+  .rights-seal {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    border-radius: 999px;
+    padding: 0.14rem 0.6rem 0.14rem 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .poetry-focus {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    overflow-y: auto;
+    background:
+      radial-gradient(70% 50% at 50% 0%, rgba(147, 171, 212, 0.16), transparent 70%),
+      var(--bg);
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}

@@ -1,0 +1,23 @@
+# Render Blueprint: one free web service built from the Dockerfile.
+# Secret values (DATABASE_URL) are NOT here: you paste them in Render's dashboard.
+services:
+  - type: web
+    name: booktracker
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/config
+    envVars:
+      - key: BOOKTRACKER_AUTH
+        value: supabase
+      - key: SUPABASE_URL
+        value: https://xoygqiwdvkpysiedeixr.supabase.co
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: VITE_SUPABASE_URL
+        value: https://xoygqiwdvkpysiedeixr.supabase.co
+      - key: VITE_SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: BOOKTRACKER_CONTACT
+        sync: false

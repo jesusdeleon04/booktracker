@@ -1,0 +1,11 @@
+**/node_modules
+frontend/dist
+backend/data
+backend/.env
+frontend/.env.local
+old_app
+.git
+.claude
+**/__pycache__
+.pytest_cache
+books.db
