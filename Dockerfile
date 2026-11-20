@@ -2,7 +2,7 @@
 FROM node:24-slim AS web
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
-RUN npm ci
+RUN npm install --no-audit --no-fund
 COPY frontend/ ./
 # Public values (safe in the browser). Render passes its environment variables as build args.
 ARG VITE_SUPABASE_URL
