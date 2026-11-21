@@ -9,6 +9,7 @@ import { EmptyState, PageTitle, Ring, Segmented } from '../components/ui/Bits'
 import { availableYears, computeStats } from '../lib/stats'
 import { MONTHS_SHORT, monthName, num, plural } from '../lib/format'
 import { hashString } from '../lib/match'
+import { books as copy } from '../lib/copy'
 
 function Card({ children, className = '', delay = 0 }) {
   return (
@@ -140,14 +141,14 @@ export default function Stats() {
           Tu vida <em className="display-wonk">lectora</em>
         </PageTitle>
         <EmptyState
-          title="Aún no hay nada que contar"
+          title={copy.stats.empty.title}
           action={
             <button className="btn btn-primary" onClick={() => openPalette('add')}>
               <Plus size={16} /> Añadir libros
             </button>
           }
         >
-          Cuando añadas y termines libros, aquí verás tu evolución: géneros, autores, páginas, ritmo y récords.
+          {copy.stats.empty.body}
         </EmptyState>
       </div>
     )
@@ -212,13 +213,13 @@ export default function Stats() {
       </Card>
 
       <div className="mb-5 grid grid-cols-2 gap-5 lg:grid-cols-4">
-        <BigNumber label="Leídos en total" value={num(st.allReadCount)} sub="desde que usas Booktracker" delay={0.05} />
+        <BigNumber label="Leídos en total" value={num(st.allReadCount)} sub={copy.stats.sinceYouStarted} delay={0.05} />
         <BigNumber label="Leyendo ahora" value={st.readingCount} sub="libros abiertos" delay={0.1} />
         <BigNumber label="Pendientes" value={st.wantCount} sub="en «Quiero leer»" delay={0.15} />
         <BigNumber
           label="Valoración media"
           value={st.avgRating ? st.avgRating.toFixed(1).replace('.', ',') : '—'}
-          sub={st.ratedCount ? `sobre ${plural(st.ratedCount, 'libro calificado', 'libros calificados')}` : 'aún sin calificaciones'}
+          sub={st.ratedCount ? `sobre ${plural(st.ratedCount, 'libro valorado', 'libros valorados')}` : 'aún sin valoraciones'}
           delay={0.2}
         />
       </div>
@@ -301,7 +302,7 @@ export default function Stats() {
 
       <div className="mb-5 grid gap-5 lg:grid-cols-[1fr_1.3fr]">
         <Card>
-          <p className="kicker">Calificaciones</p>
+          <p className="kicker">Valoraciones</p>
           <h2 className="mt-1 mb-6 font-display text-2xl">Cómo puntúas</h2>
           <div className="space-y-2.5">
             {[5, 4, 3, 2, 1].map((s) => {

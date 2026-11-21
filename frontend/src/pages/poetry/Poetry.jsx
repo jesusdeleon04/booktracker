@@ -9,6 +9,7 @@ import { JurisdictionSelect, PoetCard, PoemText, Portrait, RightsBadge, Skeleton
 import { authorPath, lifespan, poemPath, poetryApi, stanzas } from '../../lib/poetry'
 import { usePoetry } from '../../store/usePoetry'
 import { useStore } from '../../store/useStore'
+import { poetry as copy } from '../../lib/copy'
 
 function DailyPoem() {
   const [j] = useJurisdiction()
@@ -144,15 +145,16 @@ export default function Poetry() {
         <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="kicker kicker-dusk mb-2 inline-flex items-center gap-2">
-              <MoonStar size={14} /> Biblioteca de poesía
+              <MoonStar size={14} /> {copy.kicker}
             </p>
             <motion.h1
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className="font-display text-[2rem] leading-[1] font-light text-balance md:text-[2.8rem]"
             >
-              Una antología que <em className="display-wonk">se lee</em> a la hora azul
+              {copy.title[0]} <em className="display-wonk">{copy.title[1]}</em>
             </motion.h1>
+            <p className="mt-3 max-w-xl text-sm text-ink-2 md:text-base">{copy.sub}</p>
           </div>
           <form onSubmit={submit} className="relative w-full lg:w-[22rem]">
             <Search size={15} className="absolute top-1/2 left-3.5 -translate-y-1/2 text-ink-3" />

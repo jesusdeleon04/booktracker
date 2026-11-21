@@ -1,7 +1,7 @@
-import { Suspense, lazy, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { motion } from 'motion/react'
-import { ArrowLeft, Check, Gift, ListPlus, Minus, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react'
+import { ArrowLeft, Check, ListPlus, Minus, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import Cover from '../components/book/Cover'
 import Stars from '../components/ui/Stars'
@@ -15,8 +15,9 @@ import { AddToListDialog } from '../components/book/ListDialogs'
 import { api } from '../lib/api'
 import { STATUS, daysBetween, formatDate, languageNote, todayISO } from '../lib/format'
 import NotFound from './NotFound'
+import { books as copy } from '../lib/copy'
+import ShareBookButton from '../components/social/ShareBookButton'
 
-const ShareDialog = lazy(() => import('../components/social/ShareDialog'))
 
 function MetaItem({ label, children }) {
   if (children == null || children === '' || children === false) return null
@@ -83,8 +84,6 @@ export default function BookDetail() {
   const refreshBook = useStore((s) => s.refreshBook)
   const toast = useStore((s) => s.toast)
   const prefLang = useStore((s) => s.profile?.preferences?.language || 'es')
-  const social = useStore((s) => s.authRequired)
-  const [sharing, setSharing] = useState(false)
   const [editing, setEditing] = useState(false)
   const [listOpen, setListOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -111,7 +110,7 @@ export default function BookDetail() {
   const setStatus = async (status) => {
     if (status === book.status) return
     await updateBook(book.id, { status })
-    toast(status === 'read' ? '¡Terminado! ¿Qué te pareció? Califícalo cuando quieras.' : `Movido a ${STATUS[status].label}.`, { tone: 'success' })
+    toast(status === 'read' ? copy.detail.finished : `Movido a ${STATUS[status].label}.`, { tone: 'success' })
   }
 
   const progress = book.pageCount && book.currentPage ? Math.round((book.currentPage / book.pageCount) * 100) : 0
@@ -147,10 +146,11 @@ export default function BookDetail() {
           </motion.div>
 
           <StatusPicker value={book.status} onChange={setStatus} layoutId="detail-status" size="sm" />
+          <ShareBookButton book={book} />
 
           <div className="card space-y-4 p-4">
             <div className="flex items-center justify-between">
-              <span className="kicker">Tu calificación</span>
+              <span className="kicker">{copy.detail.rating}</span>
               <Stars value={book.rating} onChange={(r) => updateBook(book.id, { rating: r })} size={22} showValue />
             </div>
             {book.status === 'reading' && (
@@ -223,11 +223,6 @@ export default function BookDetail() {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {social && (
-              <button className="btn btn-sm" onClick={() => setSharing(true)} title="Recomendar este libro a tus amigos de la Tertulia">
-                <Gift size={13} /> Recomendar
-              </button>
-            )}
             <button className="btn btn-sm" onClick={() => setEditing(true)}>
               <Pencil size={13} /> Editar ficha
             </button>
@@ -382,11 +377,6 @@ export default function BookDetail() {
       </section>
 
       {editing && <EditBookDialog book={book} open={editing} onClose={() => setEditing(false)} />}
-      {sharing && (
-        <Suspense fallback={null}>
-          <ShareDialog open={sharing} onClose={() => setSharing(false)} kind="book" item={book} />
-        </Suspense>
-      )}
       <AddToListDialog open={listOpen} onClose={() => setListOpen(false)} bookId={book.id} />
       <ConfirmDialog
         open={confirmDelete}

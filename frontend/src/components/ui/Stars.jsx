@@ -34,7 +34,7 @@ export default function Stars({ value, onChange, size = 18, className = '', show
         className={`inline-flex items-center text-brass ${interactive ? 'cursor-pointer' : ''}`}
         onMouseLeave={() => setHover(null)}
         role={interactive ? 'radiogroup' : 'img'}
-        aria-label={value ? `${value} de 5 estrellas` : 'Sin calificar'}
+        aria-label={value ? `${value} de 5 estrellas` : 'Sin valorar'}
       >
         {[1, 2, 3, 4, 5].map((i) => {
           const fill = shown >= i ? 1 : shown >= i - 0.5 ? 0.5 : 0

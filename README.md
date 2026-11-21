@@ -36,7 +36,7 @@ Copia `backend/.env.example` a `backend/.env`. Todo funciona sin configurar nada
 - **Biblioteca**: Leídos, Leyendo, Quiero leer y listas personalizadas (se crean tres de ejemplo). Vista de portadas o de lista, filtros por género y autor, orden por fecha, valoración, título, autor o año.
 - **Ficha del libro**: portada, título, autores, sinopsis, géneros, temas, editorial, fecha, páginas, ISBN, idioma, estado, calificación por medias estrellas, fechas de inicio y fin, progreso por página, reseña y notas (se guardan solas), listas, edición manual, «Completar datos» desde las fuentes, eliminar con opción de deshacer y libros similares.
 - **Añadir libros sin teclear datos**: `Ctrl K`, `/` o el botón «Añadir libro». Escribe título, autor o ISBN y elige un resultado; se importan portada, sinopsis, editorial, fecha, páginas, ISBN y categorías. La app detecta duplicados (por id, ISBN o título y autor normalizados, aunque cambie la traducción del título). Si un libro no existe en ningún catálogo, puedes añadirlo a mano.
-- **Descubrir**: estanterías «Para ti», «Porque te gustó…», «Si te interesa [autor]», «Descubrimientos inesperados», «Clásicos que podrían gustarte» y «Fuera de tu zona de confort». Cada libro trae portada, autor, sinopsis y **por qué podría gustarte**. Además: exploración por estado de ánimo, género y tema, un **modo inmersivo** a pantalla completa y «No me interesa» para afinar.
+- **Descubrir**: estanterías «Pensando en ti», «Porque te gustó…», «Si te interesa [autor]», «Un paso al lado», «Clásicos que quizá te hablen» y «Lejos de lo habitual». Cada libro trae portada, autor, sinopsis y **por qué podría gustarte**. Además: exploración por estado de ánimo, género y tema, un **modo inmersivo** a pantalla completa y «No me interesa» para afinar.
 - **Estadísticas**: libros y páginas por año, progreso del reto anual, leídos, en curso y pendientes, valoración media, la evolución mensual dibujada como una estantería, la evolución anual, los géneros y autores más leídos, la distribución de calificaciones y los récords del año.
 - **Writer's Studio**: tu estudio de escritura con editor de máquina de escribir; se describe más abajo.
 - **Biblioteca de poesía**: antología digital con poemas de fuentes reales, lector editorial, colección personal en Supabase y PDF; se describe más abajo.
@@ -174,6 +174,7 @@ La parte social solo existe en modo multiusuario. En modo local la API responde 
 | --- | --- | --- |
 | Correspondencia | `/tertulia` | Cartas recibidas y enviadas, con filtro de sin abrir y leídas. |
 | Carta | `/tertulia/cartas/:id` | Vista inmersiva: el sobre con lacre se abre y la hoja sale. Queda fuera del marco de la app. |
+| Escritos | `/tertulia/escritos` | Lo que tus amigos publican desde su Writer's Studio y tus propias publicaciones. Lectura completa en `/tertulia/escritos/:id`. |
 | Obsequios | `/tertulia/obsequios` | Libros recomendados y poemas compartidos, recibidos y enviados. |
 | Amigos | `/tertulia/amigos` | Solicitudes, amigos, buscador (nombre, @usuario o correo exacto) y bloqueos. |
 | Avisos | `/tertulia/avisos` | Notificaciones. También se ven desde la campana de la barra superior. |
@@ -267,3 +268,12 @@ Puntos de entrada en la app:
 
 - La versión anterior del proyecto («Biblioteca Intelectual Personal», con escritorio, ideas y canvas) se conserva intacta en `old_app/bip_v2/`.
 - Los datos de Open Library son colaborativos: a veces una edición tiene una portada equivocada o la sinopsis está en otro idioma (la ficha lo indica). Desde la ficha puedes editar cualquier dato o pulsar «Completar datos».
+
+### Escritos publicados y estantería
+
+- **Publicar en Tertulia** (editor y menú de cada escrito del estudio): vista previa, título, introducción opcional y audiencia obligatoria (**Privado** o **Amigos**; no hay audiencia pública porque la Tertulia no tiene espacio público). Nada se publica solo.
+- La publicación es una **copia congelada** del escrito (texto, saltos de línea, categoría, portada). Editar el original no la cambia: el autor decide cuándo «Actualizar publicación», y los lectores ven que se actualizó. Retirar la deja privada; eliminarla no borra el escrito.
+- Permisos en servidor (`services/social.py`, `can_read_publication`): autor, o amigo aceptado y sin bloqueo con audiencia «Amigos». Todo lo demás responde 404, también las portadas. Reacciones discretas (sin contadores) y respuestas privadas entre cada lector y el autor.
+- **Mi estantería** (tu ficha): hasta ocho libros de tu biblioteca, con orden y visibilidad propios, independientes de tus favoritos privados. La sección «Lo que he escrito» de tu ficha se puede ocultar.
+- **Compartir libro** aparece en tarjetas, filas de la biblioteca, ficha, vista previa y recomendaciones y usa el mismo envío de obsequios; también acepta libros del catálogo que aún no están en tu biblioteca.
+- Migración: `supabase/migrations/20261121210000_tertulia_escritos.sql` (aditiva, con RLS sin políticas, como el resto de Tertulia).

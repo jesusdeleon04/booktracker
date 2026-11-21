@@ -317,6 +317,40 @@
   .btn-icon.btn-sm {
     width: 2rem;
   }
+  /* Sharing a book: blue-hour tint, so it never reads as edit / delete / status. */
+  .btn-share {
+    background: var(--dusk-soft);
+    border-color: color-mix(in oklab, var(--dusk) 50%, transparent);
+    color: var(--dusk);
+    font-weight: 600;
+  }
+  .btn-share:hover {
+    background: color-mix(in oklab, var(--dusk) 22%, transparent);
+    border-color: var(--dusk);
+  }
+  .btn-share-tile {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.6rem;
+    height: 1.85rem;
+    padding: 0 0.75rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in oklab, var(--dusk) 45%, transparent);
+    background: var(--dusk-soft);
+    color: var(--dusk);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, transform 0.2s;
+  }
+  .btn-share-tile:hover {
+    background: color-mix(in oklab, var(--dusk) 22%, transparent);
+    border-color: var(--dusk);
+  }
+  .btn-share-tile:active {
+    transform: scale(0.97);
+  }
 
   .chip {
     display: inline-flex;

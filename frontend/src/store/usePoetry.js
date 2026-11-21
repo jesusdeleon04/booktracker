@@ -2,6 +2,7 @@
 import { create } from 'zustand'
 import { supabase } from '../lib/supabase'
 import { cloud, guest, cloudAvailable } from '../lib/poetryCloud'
+import { auth as authCopy } from '../lib/copy'
 
 let initialised = false
 
@@ -170,11 +171,11 @@ export const usePoetry = create((set, get) => ({
 
 function authMessage(error) {
   const m = error?.message || ''
-  if (/Invalid login credentials/i.test(m)) return 'Correo o contraseña incorrectos.'
-  if (/Email not confirmed/i.test(m)) return 'Confirma tu correo antes de entrar (revisa tu bandeja de entrada).'
-  if (/already registered|already exists/i.test(m)) return 'Ya existe una cuenta con ese correo. Inicia sesión.'
-  if (/Password should be|at least/i.test(m)) return 'La contraseña es demasiado corta (mínimo 6 caracteres).'
-  if (/rate limit|too many/i.test(m)) return 'Demasiados intentos. Espera unos minutos.'
-  if (/Failed to fetch|network/i.test(m)) return 'No hay conexión con Supabase.'
-  return m || 'No se pudo completar la operación.'
+  if (/Invalid login credentials/i.test(m)) return authCopy.errors.credentials
+  if (/Email not confirmed/i.test(m)) return authCopy.errors.unconfirmed
+  if (/already registered|already exists/i.test(m)) return authCopy.errors.exists
+  if (/Password should be|at least/i.test(m)) return authCopy.errors.weak
+  if (/rate limit|too many/i.test(m)) return authCopy.errors.rateLimit
+  if (/Failed to fetch|network/i.test(m)) return authCopy.errors.offline
+  return m || authCopy.errors.generic
 }

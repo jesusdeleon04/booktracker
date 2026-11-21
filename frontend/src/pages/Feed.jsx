@@ -10,6 +10,7 @@ import { Spinner } from '../components/ui/Bits'
 import { useDiscoverPlan } from '../hooks/useDiscover'
 import { useQuickAdd } from '../components/book/RecCard'
 import { authorsLine } from '../lib/format'
+import { discover as copy } from '../lib/copy'
 
 function Slide({ entry, active, onNext }) {
   const { item, section } = entry
@@ -197,8 +198,8 @@ export default function Feed() {
         <div className="grid h-full place-items-center text-center">
           <div>
             <Spinner className="mx-auto mb-3 text-accent" size={24} />
-            <p className="font-display text-2xl">Preparando tu feed de libros…</p>
-            <p className="mt-1 text-sm text-ink-3">Buscando en catálogos reales según tu perfil.</p>
+            <p className="font-display text-2xl">{copy.immersive.loading}</p>
+            <p className="mt-1 text-sm text-ink-3">{copy.immersive.loadingSub}</p>
           </div>
         </div>
       ) : (
@@ -208,8 +209,8 @@ export default function Feed() {
           ))}
           <section className="grid h-dvh snap-start place-items-center text-center">
             <div>
-              <p className="font-display text-3xl">Has llegado al final… por ahora.</p>
-              <p className="mt-2 text-ink-2">Califica lo que leas y vuelve: el feed aprende de ti.</p>
+              <p className="font-display text-3xl">{copy.immersive.end}</p>
+              <p className="mt-2 text-ink-2">{copy.immersive.endSub}</p>
               <button className="btn btn-primary mt-6" onClick={() => navigate('/descubrir')}>
                 Volver a Descubrir
               </button>

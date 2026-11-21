@@ -8,6 +8,7 @@ export const useSocial = create((set, get) => ({
   summary: { notifications: 0, letters: 0, requests: 0 },
   friends: null, // cached list for pickers; null = not loaded
   friendsError: null,
+  shareBook: null, // the book being shared right now (one dialog for the whole app)
 
   async refreshSummary() {
     try {
@@ -40,4 +41,6 @@ export const useSocial = create((set, get) => ({
     }
   },
   invalidateFriends: () => set({ friends: null }),
+  openShareBook: (book) => set({ shareBook: book }),
+  closeShareBook: () => set({ shareBook: null }),
 }))

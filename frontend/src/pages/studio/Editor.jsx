@@ -9,6 +9,7 @@ import {
   Image as ImageIcon,
   LoaderCircle,
   Mail,
+  Megaphone,
   Maximize2,
   MoonStar,
   Minimize2,
@@ -29,9 +30,11 @@ import { clock, drafts, lastCategory, longDate, newClientKey, relativeTime, reme
 import { authHeaders } from '../../lib/api'
 import { typewriter } from '../../lib/typewriterSound'
 import { lettersApi, when } from '../../lib/social'
+import { brand, publish as publishCopy } from '../../lib/copy'
 
 const AnthologyPanel = lazy(() => import('../../components/poetry/AnthologyPanel'))
 const SendLetterDialog = lazy(() => import('../../components/social/SendLetterDialog'))
+const PublishDialog = lazy(() => import('../../components/social/PublishDialog'))
 
 const FIELDS = ['title', 'content', 'description', 'categoryId', 'coverImageId']
 const SIZES = { s: 17, m: 19, l: 21 }
@@ -126,6 +129,7 @@ export default function StudioEditor() {
   const letterTo = Number(params.get('para')) || null
   const replyTo = Number(params.get('respuesta')) || null
   const [letterOpen, setLetterOpen] = useState(false)
+  const [publishOpen, setPublishOpen] = useState(false)
   const [sentLetters, setSentLetters] = useState(null)
 
   const [doc, setDoc] = useState(null)
@@ -578,7 +582,7 @@ export default function StudioEditor() {
         <div>
           <p className="kicker mb-3">Writer's Studio</p>
           <h1 className="font-display text-4xl">{phase === 'missing' ? 'Este escrito ya no está aquí' : 'No pudimos abrir el escrito'}</h1>
-          <p className="mt-3 text-ink-2">{phase === 'missing' ? 'Puede que lo hayas eliminado.' : 'Comprueba que el servidor de Booktracker está en marcha.'}</p>
+          <p className="mt-3 text-ink-2">{phase === 'missing' ? 'Puede que lo hayas eliminado.' : `Comprueba que el servidor de ${brand.name} está en marcha.`}</p>
           <Link to="/estudio" className="btn btn-primary mt-6">
             Volver al estudio
           </Link>
@@ -650,6 +654,17 @@ export default function StudioEditor() {
           >
             <MoonStar size={16} />
           </button>
+          {social && !letterMode && (
+            <button
+              className="btn btn-sm btn-share"
+              onClick={() => setPublishOpen(true)}
+              disabled={isNew || phase !== 'ready'}
+              aria-label={publishCopy.action}
+              title={isNew ? 'Escribe algo primero: se publica un escrito guardado' : 'Publicar este escrito en la Tertulia'}
+            >
+              <Megaphone size={15} /> <span className="hidden sm:inline">{publishCopy.action}</span>
+            </button>
+          )}
           {social && (
             <button
               className={`btn btn-sm ${letterMode ? 'btn-primary' : ''}`}
@@ -1006,6 +1021,12 @@ export default function StudioEditor() {
           </motion.aside>
         )}
       </AnimatePresence>
+
+      {social && publishOpen && (
+        <Suspense fallback={null}>
+          <PublishDialog open={publishOpen} onClose={() => setPublishOpen(false)} writingId={idRef.current} flush={flushForLetter} />
+        </Suspense>
+      )}
 
       {social && letterOpen && (
         <Suspense fallback={null}>

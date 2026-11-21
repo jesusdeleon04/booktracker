@@ -5,6 +5,7 @@ import { Spinner } from '../../components/ui/Bits'
 import { Avatar } from '../../components/social/SocialBits'
 import { noticeText, socialApi, when } from '../../lib/social'
 import { useSocial } from '../../store/useSocial'
+import { tertulia as copy } from '../../lib/copy'
 
 export default function Notices() {
   const navigate = useNavigate()
@@ -39,8 +40,8 @@ export default function Notices() {
     <div className="mx-auto max-w-2xl">
       <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="kicker mb-3">Avisos</p>
-          <h1 className="font-display text-[2.4rem] leading-[1] font-light">Lo que ha pasado</h1>
+          <p className="kicker mb-3">{copy.notices.kicker}</p>
+          <h1 className="font-display text-[2.4rem] leading-[1] font-light">{copy.notices.title}</h1>
         </div>
         {unread > 0 && (
           <button className="btn btn-sm" onClick={readAll}>

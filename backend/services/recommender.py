@@ -196,7 +196,7 @@ def _join(labels):
 def _stars(r):
     if r is None:
         return ""
-    return (f"{r:.1f}".rstrip("0").rstrip(".")) + "★"
+    return (f"{r:.1f}".rstrip("0").rstrip(".")).replace(".", ",") + "★"
 
 
 def explain(book, comps, taste, lead=None):
@@ -457,27 +457,27 @@ def _authors(taste, n=2):
 
 def plan(taste):
     """Ordered list of shelves for the Discover page (no network calls)."""
-    sections = [{"key": "for-you", "title": "Para ti",
-                 "subtitle": "Elegidos a partir de tu perfil, tus lecturas y tus valoraciones."}]
+    sections = [{"key": "for-you", "title": "Pensando en ti",
+                 "subtitle": "Escogidos según tu perfil, lo que has leído y cómo lo has valorado."}]
     anchors = _anchors(taste)
     authors = _authors(taste)
     if anchors:
         a = anchors[0]
         sections.append({"key": a["key"], "title": f"Porque te gustó «{a['title']}»",
-                         "subtitle": "Libros que comparten sus temas, su tono o su mundo."})
+                         "subtitle": "Comparten con él temas, tono o ambiente."})
     if authors:
         sections.append({"key": f"author:{authors[0]}", "title": f"Si te interesa {authors[0]}",
                          "subtitle": "Más de su obra que aún no está en tu biblioteca."})
-    sections.append({"key": "unexpected", "title": "Descubrimientos inesperados",
-                     "subtitle": "Géneros vecinos que tocan los temas que te obsesionan."})
-    sections.append({"key": "classics", "title": "Clásicos que podrían gustarte",
-                     "subtitle": "Obras que resisten al tiempo, filtradas por tu gusto."})
+    sections.append({"key": "unexpected", "title": "Un paso al lado",
+                     "subtitle": "Géneros vecinos a los tuyos, con temas que ya te atraen."})
+    sections.append({"key": "classics", "title": "Clásicos que quizá te hablen",
+                     "subtitle": "Obras que han resistido el tiempo, filtradas por tu gusto."})
     if len(anchors) > 1:
         a = anchors[1]
         sections.append({"key": a["key"], "title": f"Porque te gustó «{a['title']}»",
-                         "subtitle": "Más libros en la misma frecuencia."})
-    sections.append({"key": "comfort", "title": "Fuera de tu zona de confort",
-                     "subtitle": "Un salto calculado: lejos de lo habitual, cerca de lo que valoras."})
+                         "subtitle": "Más libros en su misma línea."})
+    sections.append({"key": "comfort", "title": "Lejos de lo habitual",
+                     "subtitle": "Un salto medido: distinto de lo que sueles leer, pero cerca de lo que valoras."})
     if len(authors) > 1:
         sections.append({"key": f"author:{authors[1]}", "title": f"Si te interesa {authors[1]}",
                          "subtitle": "Más de su obra que aún no está en tu biblioteca."})

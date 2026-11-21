@@ -10,6 +10,8 @@ import Shelf from '../components/book/Shelf'
 import { PageTitle, SectionHead } from '../components/ui/Bits'
 import StringLights from '../components/ui/StringLights'
 import { authorsLine } from '../lib/format'
+import { discover as copy } from '../lib/copy'
+import ShareBookButton from '../components/social/ShareBookButton'
 
 function ForYouHero({ item }) {
   const openPreview = useStore((s) => s.openPreview)
@@ -32,7 +34,7 @@ function ForYouHero({ item }) {
         </button>
       </div>
       <div className="flex flex-col justify-center p-7 pt-0 md:p-10 md:pl-2">
-        <p className="font-hand mb-2 text-[24px] leading-none text-accent">tu mejor coincidencia</p>
+        <p className="font-hand mb-2 text-[24px] leading-none text-accent">{copy.topPick}</p>
         <h3 className="font-display text-3xl leading-tight text-balance md:text-[2.6rem]">{item.title}</h3>
         <p className="mt-2 text-ink-2">
           {authorsLine(item.authors)}
@@ -61,6 +63,7 @@ function ForYouHero({ item }) {
           <button className="btn" onClick={() => openPreview(item, { reasons: item.reasons })}>
             Ver ficha completa
           </button>
+          <ShareBookButton book={item} className="!w-auto px-4" />
         </div>
       </div>
     </motion.div>
@@ -80,7 +83,7 @@ function DiscoverSection({ section, seed, eager }) {
       return (
         <section ref={ref} className="mb-16">
           <SectionHead title={section.title} subtitle={section.subtitle} />
-          <p className="text-sm text-ink-3">No pudimos cargar esta sección ahora mismo ({data.error}).</p>
+          <p className="text-sm text-ink-3">{copy.sectionFailed(data.error)}</p>
         </section>
       )
     }
@@ -89,7 +92,7 @@ function DiscoverSection({ section, seed, eager }) {
 
   return (
     <section ref={ref} className="mb-16">
-      <SectionHead kicker={isForYou ? 'Recomendaciones' : null} title={section.title} subtitle={section.subtitle} />
+      <SectionHead kicker={isForYou ? copy.kicker : null} title={section.title} subtitle={section.subtitle} />
       {loading ? (
         <div className="flex gap-5 overflow-hidden">
           {[0, 1, 2, 3, 4, 5, 6].map((i) => (
@@ -114,7 +117,7 @@ function MoodStrip() {
   const moods = useStore((s) => s.meta.moods)
   return (
     <section className="mb-16">
-      <SectionHead kicker="Explorar" title="¿Qué te pide el cuerpo hoy?" subtitle="Elige un estado de ánimo y te mostramos libros reales que encajan con él y contigo." />
+      <SectionHead kicker={copy.moods.kicker} title={copy.moods.title} subtitle={copy.moods.sub} />
       <div className="shelf-scroll !gap-3">
         {moods.map((m, i) => (
           <motion.div key={m.key} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
@@ -176,24 +179,24 @@ export default function Discover() {
     <div>
       <StringLights className="-mx-4 -mt-8 mb-2 md:-mx-8 md:-mt-12" height={76} swags={4} perSwag={8} />
       <PageTitle
-        kicker={insights?.archetype ? `Perfil: ${insights.archetype.name}` : 'Descubrir'}
+        kicker={insights?.archetype ? copy.profileKicker(insights.archetype.name) : 'Descubrir'}
         sub={
           signals > 0
-            ? 'Cada recomendación sale de catálogos reales y se explica: tus géneros, tus temas, tus autores y lo que has calificado.'
-            : 'Completa tu perfil o añade libros a tu biblioteca para afinar las recomendaciones.'
+            ? copy.subWithSignals
+            : copy.subNoSignals
         }
         right={
           <>
             <Link to="/descubrir/inmersivo" className="btn btn-ink">
               <Play size={14} /> Modo inmersivo
             </Link>
-            <button className="btn" onClick={() => reload(seed + 1)} title="Ver otras recomendaciones">
-              <RefreshCw size={15} /> Otras ideas
+            <button className="btn" onClick={() => reload(seed + 1)} title={copy.anotherHint}>
+              <RefreshCw size={15} /> {copy.another}
             </button>
           </>
         }
       >
-        Tu próxima <em className="display-wonk">lectura</em>
+        {copy.title[0]} <em className="display-wonk">{copy.title[1]}</em>
       </PageTitle>
 
       {!plan ? (

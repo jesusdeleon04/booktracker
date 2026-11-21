@@ -8,6 +8,8 @@ import BookPreview from '../book/BookPreview'
 import CommandPalette from '../search/CommandPalette'
 import { ManualAddDialog } from '../book/BookForm'
 import NotificationBell from '../social/NotificationBell'
+import { brand } from '../../lib/copy'
+import ShareBookHost from '../social/ShareBookHost'
 
 const NAV = [
   { to: '/', label: 'Inicio', icon: House, end: true },
@@ -28,7 +30,7 @@ function useTertuliaWaiting() {
 
 export function Wordmark({ className = '' }) {
   return (
-    <Link to="/" className={`group flex items-center gap-2 ${className}`} aria-label="Booktracker, inicio">
+    <Link to="/" className={`group flex items-center gap-2 ${className}`} aria-label={brand.homeLabel}>
       <svg width="22" height="26" viewBox="0 0 22 26" aria-hidden="true" className="transition-transform duration-500 group-hover:-rotate-6">
         <path d="M2 3.5A2.5 2.5 0 0 1 4.5 1h13A2.5 2.5 0 0 1 20 3.5V25l-9-5-9 5V3.5z" fill="var(--accent)" />
         <path d="M6 7h10M6 11h7" stroke="var(--bg)" strokeWidth="1.8" strokeLinecap="round" />
@@ -191,6 +193,7 @@ export default function AppShell() {
       <BookPreview />
       <CommandPalette />
       <ManualAddDialog />
+      <ShareBookHost />
     </div>
   )
 }

@@ -11,6 +11,7 @@ import { Spinner } from '../ui/Bits'
 import { api } from '../../lib/api'
 import { useStore } from '../../store/useStore'
 import { STATUS, authorsLine, languageNote } from '../../lib/format'
+import ShareBookButton from '../social/ShareBookButton'
 
 function Meta({ label, value }) {
   if (!value) return null
@@ -171,9 +172,11 @@ function PreviewBody({ item, reasons, onClose }) {
                 </button>
               ))}
             </div>
-            <p className="mt-2 text-xs text-ink-3">Importamos automáticamente portada, sinopsis, editorial, páginas, ISBN y géneros.</p>
+            <p className="mt-2 text-xs text-ink-3">Traemos la portada, la sinopsis, la editorial, las páginas, el ISBN y los géneros.</p>
           </div>
         )}
+
+        <ShareBookButton book={book} />
 
         {/* Why */}
         {reasons?.length > 0 && (

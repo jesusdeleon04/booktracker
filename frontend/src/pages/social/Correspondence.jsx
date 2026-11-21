@@ -8,6 +8,7 @@ import { lettersApi, when } from '../../lib/social'
 import { newClientKey, studioApi } from '../../lib/studio'
 import { useSocial } from '../../store/useSocial'
 import { useStore } from '../../store/useStore'
+import { letters as copy } from '../../lib/copy'
 
 const FILTERS = { all: 'Todas', unread: 'Sin abrir', read: 'Leídas' }
 
@@ -69,11 +70,11 @@ export default function Correspondence() {
       <header className="relative mb-10 grid gap-6 md:grid-cols-[1fr_auto] md:items-end">
         <div className="pointer-events-none absolute -top-16 left-0 -z-10 h-64 w-[36rem] bg-[radial-gradient(closest-side,rgba(244,176,88,0.14),transparent)]" aria-hidden="true" />
         <div>
-          <p className="kicker mb-3">Correspondencia</p>
+          <p className="kicker mb-3">{copy.kicker}</p>
           <motion.h1 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="font-display text-[2.6rem] leading-[0.98] font-light text-balance md:text-[4rem]">
-            Cartas <em className="display-wonk">escritas a máquina</em>
+            {copy.title[0]} <em className="display-wonk">{copy.title[1]}</em>
           </motion.h1>
-          <p className="mt-3 max-w-xl text-ink-2">Lo que te escriben tus amigos llega cerrado con lacre. Ábrelo cuando tengas un momento para leerlo con calma.</p>
+          <p className="mt-3 max-w-xl text-ink-2">{copy.sub}</p>
         </div>
         <button className="btn btn-primary h-12 px-6 text-base" onClick={write} disabled={starting}>
           {starting ? <Spinner size={16} /> : <Feather size={18} />} Escribir una carta

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { motion } from 'motion/react'
-import { ArrowLeft, ArrowRight, Ellipsis, FolderInput, GripVertical, Image, PenLine, Trash2 } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Ellipsis, FolderInput, GripVertical, Image, Megaphone, PenLine, Trash2 } from 'lucide-react'
 import { CategoryList, Popover, WritingCover } from './StudioBits'
 import { displayTitle, relativeTime, shortDate } from '../../lib/studio'
 
@@ -17,6 +17,7 @@ export default function WritingCard({
   onChangeCategory,
   onCreateCategory,
   onCover,
+  onPublish,
   onDelete,
   onMove,
   dragHandlers = {},
@@ -74,6 +75,11 @@ export default function WritingCard({
                   <MenuItem icon={FolderInput} onClick={() => setCatMenu(true)}>
                     Cambiar categoría
                   </MenuItem>
+                  {onPublish && (
+                    <MenuItem icon={Megaphone} onClick={() => { setMenu(false); onPublish() }}>
+                      Publicar en Tertulia
+                    </MenuItem>
+                  )}
                   <MenuItem icon={Image} onClick={() => { setMenu(false); onCover() }}>
                     Cambiar portada
                   </MenuItem>

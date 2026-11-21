@@ -1,5 +1,6 @@
 // Thin fetch wrapper around the Booktracker API (/api is proxied to Flask in dev).
 import { supabase } from './supabase'
+import { errors } from './copy'
 
 let cachedToken = null
 if (supabase) {
@@ -52,7 +53,7 @@ async function request(method, path, { params, body, signal } = {}) {
     })
   } catch (err) {
     if (err.name === 'AbortError') throw err
-    throw new ApiError('No se pudo conectar con el servidor de Booktracker.', 0)
+    throw new ApiError(errors.server, 0)
   }
   let payload = null
   try {

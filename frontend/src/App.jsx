@@ -35,6 +35,8 @@ const Correspondence = lazy(() => import('./pages/social/Correspondence'))
 const LetterView = lazy(() => import('./pages/social/LetterView'))
 const Gifts = lazy(() => import('./pages/social/Gifts'))
 const Friends = lazy(() => import('./pages/social/Friends'))
+const Writings = lazy(() => import('./pages/social/Writings'))
+const WritingView = lazy(() => import('./pages/social/WritingView'))
 const Notices = lazy(() => import('./pages/social/Notices'))
 const MyCard = lazy(() => import('./pages/social/MyCard'))
 const PersonPage = lazy(() => import('./pages/social/PersonPage'))
@@ -155,6 +157,8 @@ export default function App() {
             <Route path="tertulia" element={<Tertulia />}>
               <Route index element={<Correspondence />} />
               <Route path="obsequios" element={<Gifts />} />
+              <Route path="escritos" element={<Writings />} />
+              <Route path="escritos/:id" element={<WritingView />} />
               <Route path="amigos" element={<Friends />} />
               <Route path="avisos" element={<Notices />} />
               <Route path="ficha" element={<MyCard />} />

@@ -58,6 +58,24 @@ export const lettersApi = {
   },
 }
 
+export const publicationsApi = {
+  publish: (body) => api.post('/publications', body),
+  list: (params) => api.get('/publications', params),
+  get: (id) => api.get(`/publications/${id}`),
+  byWriting: (writingId) => api.get(`/publications/by-writing/${writingId}`),
+  update: (id, body) => api.patch(`/publications/${id}`, body),
+  refresh: (id) => api.post(`/publications/${id}/refresh`),
+  remove: (id) => api.del(`/publications/${id}`),
+  react: (id, reaction) => api.post(`/publications/${id}/react`, { reaction }),
+  comment: (id, body, threadUserId) => api.post(`/publications/${id}/comments`, { body, threadUserId }),
+  deleteComment: (id, commentId) => api.del(`/publications/${id}/comments/${commentId}`),
+}
+
+export const AUDIENCES = {
+  private: { label: 'Privado', hint: 'Solo tú puedes leerlo. Sigue en tu estudio y nadie más lo ve.' },
+  friends: { label: 'Amigos', hint: 'Lo leen tus amigos de la Tertulia, nadie más.' },
+}
+
 export const STATIONERY = {
   marfil: { label: 'Marfil', hint: 'La hoja de siempre, recién salida del rodillo.' },
   verjurado: { label: 'Verjurado', hint: 'Papel de hilos, como el de las cartas de antes.' },
@@ -137,6 +155,10 @@ export function noticeText(n) {
       return { who, text: 'comparte un poema contigo.', to: `/tertulia/obsequios?abrir=poem-${n.refId}` }
     case 'letter':
       return { who, text: 'te ha escrito una carta.', to: `/tertulia/cartas/${n.refId}` }
+    case 'pub_comment':
+      return { who, text: 'ha respondido a uno de tus escritos.', to: `/tertulia/escritos/${n.refId}` }
+    case 'pub_reply':
+      return { who, text: 'te ha respondido en su escrito.', to: `/tertulia/escritos/${n.refId}` }
     case 'book_reply':
       return { who, text: 'respondió a tu recomendación.', to: '/tertulia/obsequios?caja=enviados' }
     case 'poem_reply':

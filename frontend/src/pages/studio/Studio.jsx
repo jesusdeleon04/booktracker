@@ -1,15 +1,18 @@
-import { useEffect, useMemo, useState } from 'react'
+import { Suspense, lazy, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { motion } from 'motion/react'
 import { ArrowRight, Feather, Search, Settings2, TriangleAlert } from 'lucide-react'
 import { useStudio } from '../../store/useStudio'
 import { useStore } from '../../store/useStore'
 import WritingCard from '../../components/studio/WritingCard'
+
+const PublishDialog = lazy(() => import('../../components/social/PublishDialog'))
 import CoverPicker from '../../components/studio/CoverPicker'
 import CategoryManager from '../../components/studio/CategoryManager'
 import { ConfirmDialog } from '../../components/ui/Dialog'
 import { displayTitle, drafts, relativeTime } from '../../lib/studio'
 import { fold } from '../../lib/match'
+import { studio as copy } from '../../lib/copy'
 
 const SORTS = {
   updated: { label: 'Última modificación', fn: (a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || '') },
@@ -60,6 +63,8 @@ export default function Studio() {
   const [sort, setSortState] = useState(readSort)
   const [managerOpen, setManagerOpen] = useState(false)
   const [coverFor, setCoverFor] = useState(null)
+  const [publishFor, setPublishFor] = useState(null)
+  const social = useStore((s) => s.authRequired)
   const [toDelete, setToDelete] = useState(null)
   const [dragId, setDragId] = useState(null)
   const [overId, setOverId] = useState(null)
@@ -113,19 +118,19 @@ export default function Studio() {
       <header className="relative mb-10 grid gap-8 md:mb-14 lg:grid-cols-[1fr_auto] lg:items-end">
         <div className="pointer-events-none absolute -top-24 left-1/2 -z-10 h-80 w-[46rem] -translate-x-1/2 bg-[radial-gradient(closest-side,rgba(244,176,88,0.16),transparent)]" aria-hidden="true" />
         <div>
-          <p className="kicker mb-3">Writer's Studio</p>
+          <p className="kicker mb-3">{copy.kicker}</p>
           <motion.h1
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: [0.2, 0.75, 0.2, 1] }}
             className="font-display text-[2.6rem] leading-[0.98] font-light text-balance md:text-[4.2rem]"
           >
-            Tu estudio de <em className="display-wonk">escritura</em>
+            {copy.title[0]} <em className="display-wonk">{copy.title[1]}</em>
           </motion.h1>
           <p className="mt-4 font-mono text-[13px] text-ink-2">
             {writings.length
               ? `${writings.length} ${writings.length === 1 ? 'escrito' : 'escritos'} · ${totalWords.toLocaleString('es-ES')} palabras${lastWritten ? ` · última escritura ${relativeTime(lastWritten)}` : ''}`
-              : 'Un rincón para tus poemas, relatos, cartas y pensamientos.'}
+              : copy.subEmpty}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -219,12 +224,12 @@ export default function Studio() {
             <NewSheet />
           </div>
           <div>
-            <h2 className="font-display text-3xl">Tu estudio está esperando la primera línea.</h2>
+            <h2 className="font-display text-3xl">{copy.empty.title}</h2>
             <p className="mt-3 max-w-lg text-ink-2">
-              Poemas, relatos, cartas que nunca enviarás, ideas sueltas a medianoche. Todo se guarda solo mientras escribes, y puedes volver exactamente donde lo dejaste.
+              {copy.empty.body}
             </p>
             <button className="btn btn-primary mt-6 h-12 px-6" onClick={() => navigate('/estudio/escrito/nuevo')}>
-              <Feather size={18} /> Empezar a escribir
+              <Feather size={18} /> {copy.empty.cta}
             </button>
           </div>
         </div>
@@ -252,6 +257,7 @@ export default function Studio() {
               }}
               onCreateCategory={(name) => createCategory(name)}
               onCover={() => setCoverFor(w.id)}
+              onPublish={social ? () => setPublishFor(w.id) : undefined}
               onDelete={() => setToDelete(w)}
               onMove={(dir) => move(w.id, dir)}
               dragHandlers={
@@ -284,6 +290,11 @@ export default function Studio() {
       )}
 
       <CategoryManager open={managerOpen} onClose={() => setManagerOpen(false)} />
+      {social && publishFor && (
+        <Suspense fallback={null}>
+          <PublishDialog open onClose={() => setPublishFor(null)} writingId={publishFor} />
+        </Suspense>
+      )}
       <CoverPicker
         open={!!coverWriting}
         onClose={() => setCoverFor(null)}

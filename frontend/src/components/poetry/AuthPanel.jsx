@@ -4,6 +4,7 @@ import { Dialog } from '../ui/Dialog'
 import { Spinner } from '../ui/Bits'
 import { usePoetry } from '../../store/usePoetry'
 import { useStore } from '../../store/useStore'
+import { auth as copy } from '../../lib/copy'
 
 export function GoogleButton({ className = '' }) {
   const signInWithGoogle = usePoetry((s) => s.signInWithGoogle)
@@ -36,7 +37,7 @@ export function GoogleButton({ className = '' }) {
             <path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.9 2.3-8.3 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z" />
           </svg>
         )}
-        Continuar con Google
+        {copy.login.google}
       </button>
       {error && <p className="mt-2 text-sm text-ember">{error}</p>}
     </div>
@@ -77,17 +78,15 @@ export function AuthDialog({ open, onClose }) {
     }
   }
 
-  const titles = { in: 'Inicia sesión', up: 'Crea tu cuenta', reset: 'Recuperar contraseña' }
+  const t = copy.dialog
   return (
-    <Dialog open={open} onClose={onClose} title={titles[mode]} width="max-w-md">
+    <Dialog open={open} onClose={onClose} title={t.titles[mode]} width="max-w-md">
       {sent ? (
         <div className="py-4 text-center">
           <MailCheck className="mx-auto mb-3 text-sage" size={28} />
-          <p className="font-display text-xl">Revisa tu correo</p>
+          <p className="font-display text-xl">{t.sentTitle}</p>
           <p className="mt-2 text-sm text-ink-2">
-            {sent === 'confirm'
-              ? `Te hemos enviado un enlace a ${email} para confirmar la cuenta. Después vuelve aquí e inicia sesión.`
-              : `Si existe una cuenta con ${email}, recibirás un enlace para elegir una contraseña nueva.`}
+            {sent === 'confirm' ? t.sentConfirm(email) : t.sentReset(email)}
           </p>
           <button
             className="btn mt-5"
@@ -96,21 +95,21 @@ export function AuthDialog({ open, onClose }) {
               setMode('in')
             }}
           >
-            Volver
+            {t.back}
           </button>
         </div>
       ) : (
         <form onSubmit={submit} className="space-y-3">
-          <p className="text-sm text-ink-2">Tu colección de poesía se guarda en Supabase, protegida para que solo tú puedas verla, y se sincroniza entre dispositivos.</p>
+          <p className="text-sm text-ink-2">{t.intro[mode]}</p>
           <GoogleButton />
-          <p className="text-center text-xs text-ink-3">o con tu correo</p>
+          <p className="text-center text-xs text-ink-3">{t.or}</p>
           <label className="block">
-            <span className="mb-1 block text-xs text-ink-3">Correo electrónico</span>
+            <span className="mb-1 block text-xs text-ink-3">{t.email}</span>
             <input className="field" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
           </label>
           {mode !== 'reset' && (
             <label className="block">
-              <span className="mb-1 block text-xs text-ink-3">Contraseña</span>
+              <span className="mb-1 block text-xs text-ink-3">{t.password}</span>
               <input
                 className="field"
                 type="password"
@@ -120,25 +119,26 @@ export function AuthDialog({ open, onClose }) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
+              {mode === 'up' && <span className="mt-1 block text-xs text-ink-3">{t.passwordHint}</span>}
             </label>
           )}
           {error && <p className="rounded-xl bg-[rgba(212,105,63,0.12)] px-3 py-2 text-sm text-ember">{error}</p>}
           <button className="btn btn-primary w-full" disabled={busy}>
-            {busy && <Spinner size={15} />} {mode === 'in' ? 'Entrar' : mode === 'up' ? 'Crear cuenta' : 'Enviar enlace'}
+            {busy && <Spinner size={15} />} {t.submit[mode]}
           </button>
           <div className="flex flex-wrap justify-between gap-2 pt-1 text-sm">
             {mode !== 'in' ? (
               <button type="button" className="text-dusk hover:underline" onClick={() => setMode('in')}>
-                Ya tengo cuenta
+                {t.switchToIn}
               </button>
             ) : (
               <button type="button" className="text-dusk hover:underline" onClick={() => setMode('up')}>
-                Crear una cuenta
+                {t.switchToUp}
               </button>
             )}
             {mode === 'in' && (
               <button type="button" className="text-ink-3 hover:underline" onClick={() => setMode('reset')}>
-                ¿Olvidaste la contraseña?
+                {t.forgot}
               </button>
             )}
           </div>
@@ -160,7 +160,7 @@ export function NewPasswordDialog() {
     setBusy(true)
     try {
       await setNewPassword(password)
-      toast('Contraseña actualizada.')
+      toast(copy.newPassword.done)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -168,12 +168,12 @@ export function NewPasswordDialog() {
     }
   }
   return (
-    <Dialog open={recovery} onClose={() => usePoetry.setState((s) => ({ auth: { ...s.auth, recovery: false } }))} title="Elige una contraseña nueva" width="max-w-md">
+    <Dialog open={recovery} onClose={() => usePoetry.setState((s) => ({ auth: { ...s.auth, recovery: false } }))} title={copy.newPassword.title} width="max-w-md">
       <form onSubmit={submit} className="space-y-3">
-        <input className="field" type="password" minLength={6} required autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} aria-label="Contraseña nueva" />
+        <input className="field" type="password" minLength={6} required autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} aria-label={copy.newPassword.label} />
         {error && <p className="text-sm text-ember">{error}</p>}
         <button className="btn btn-primary w-full" disabled={busy}>
-          {busy && <Spinner size={15} />} <KeyRound size={15} /> Guardar contraseña
+          {busy && <Spinner size={15} />} <KeyRound size={15} /> {copy.newPassword.save}
         </button>
       </form>
     </Dialog>
@@ -190,15 +190,15 @@ export function AccountBar() {
   const [moving, setMoving] = useState(false)
 
   if (auth.status === 'unavailable')
-    return <p className="rounded-2xl border border-line bg-surface px-4 py-3 text-sm text-ink-2">Supabase no está configurado: tu colección se guarda solo en este navegador.</p>
+    return <p className="rounded-2xl border border-line bg-surface px-4 py-3 text-sm text-ink-2">{copy.account.unavailable}</p>
 
   const move = async () => {
     setMoving(true)
     try {
       const n = await importGuest()
-      toast(`${n} ${n === 1 ? 'poema pasado' : 'poemas pasados'} a tu cuenta.`)
+      toast(copy.account.moved(n))
     } catch (err) {
-      toast(`No se pudo completar: ${err.message}`, { tone: 'error' })
+      toast(copy.account.moveFailed(err.message), { tone: 'error' })
     } finally {
       setMoving(false)
     }
@@ -210,10 +210,10 @@ export function AccountBar() {
         <Cloud size={18} className={auth.status === 'signedIn' ? 'text-sage' : 'text-ink-3'} />
         <p className="flex-1 text-sm text-ink-2">
           {auth.status === 'loading'
-            ? 'Comprobando tu sesión…'
+            ? copy.account.checking
             : auth.status === 'signedIn'
-              ? `Sincronizada con tu cuenta (${auth.user.email}).`
-              : 'Modo invitado: tu colección se guarda en este navegador. Inicia sesión para tenerla en todos tus dispositivos.'}
+              ? copy.account.synced(auth.user.email)
+              : copy.account.guest}
         </p>
         <div className="flex flex-wrap gap-2">
           {auth.status === 'signedIn' && guestCount > 0 && (
@@ -223,12 +223,12 @@ export function AccountBar() {
           )}
           {auth.status === 'signedIn' ? (
             <button className="btn btn-sm" onClick={() => signOut()}>
-              <LogOut size={14} /> Salir
+              <LogOut size={14} /> {copy.account.signOut}
             </button>
           ) : (
             auth.status === 'signedOut' && (
               <button className="btn btn-sm btn-ink" onClick={() => setOpen(true)}>
-                Iniciar sesión
+                {copy.account.signIn}
               </button>
             )
           )}

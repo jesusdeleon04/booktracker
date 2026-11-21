@@ -172,7 +172,7 @@ function PaletteBody({ mode, onClose }) {
           <div className="px-4 py-8 text-center">
             <p className="font-display text-2xl">{mode === 'add' ? '¿Qué libro añadimos?' : 'Encuentra cualquier libro'}</p>
             <p className="mx-auto mt-2 max-w-sm text-sm text-ink-2">
-              Escribe un título, un autor o pega un ISBN. Traemos la portada, la sinopsis y todos los datos automáticamente.
+              Escribe un título o un autor, o pega un ISBN. Traemos la portada, la sinopsis y los datos.
             </p>
             <div className="mt-5 flex flex-wrap justify-center gap-2">
               {['Cien años de soledad', 'Ursula K. Le Guin', '9788420674209'].map((s) => (

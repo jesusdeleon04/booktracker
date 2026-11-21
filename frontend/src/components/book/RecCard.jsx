@@ -4,6 +4,8 @@ import { BookmarkPlus, Check, Feather, X } from 'lucide-react'
 import Cover from './Cover'
 import { useStore } from '../../store/useStore'
 import { authorsLine } from '../../lib/format'
+import { books as copy } from '../../lib/copy'
+import ShareBookButton from '../social/ShareBookButton'
 
 export function useQuickAdd() {
   const addBook = useStore((s) => s.addBook)
@@ -12,7 +14,7 @@ export function useQuickAdd() {
     const res = await addBook(item, { status, ...extra })
     if (res.book && !res.duplicate) {
       const label = { want: 'Quiero leer', reading: 'Leyendo', read: 'Leídos' }[status]
-      toast(`«${res.book.title}» añadido a ${label}.`, { tone: 'success' })
+      toast(copy.toasts.added(res.book.title, label), { tone: 'success' })
     }
     return res
   }
@@ -32,7 +34,7 @@ export default function RecCard({ item, index = 0, width = 'w-[164px] sm:w-[184p
     const ok = await feedback(item, 'dismiss')
     if (ok) {
       onDismiss?.(item)
-      toast('Entendido: no volveremos a sugerirlo.', { tone: 'info' })
+      toast(copy.toasts.dismissed, { tone: 'info' })
     }
   }
   const save = async (e) => {
@@ -105,6 +107,7 @@ export default function RecCard({ item, index = 0, width = 'w-[164px] sm:w-[184p
             <span className="font-hand line-clamp-3 text-[16.5px] leading-[1.12]">{item.reasons[0]}</span>
           </p>
         )}
+        <ShareBookButton book={item} variant="tile" />
       </div>
     </motion.article>
   )

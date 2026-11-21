@@ -1,11 +1,12 @@
 import { useEffect } from 'react'
 import { NavLink, Outlet } from 'react-router'
-import { Bell, Gift, Mail, UserRound, Users } from 'lucide-react'
+import { Bell, Feather, Gift, Mail, UserRound, Users } from 'lucide-react'
 import { useSocial } from '../../store/useSocial'
 
 const TABS = [
   { to: '/tertulia', end: true, label: 'Correspondencia', icon: Mail, badge: 'letters' },
   { to: '/tertulia/obsequios', label: 'Obsequios', icon: Gift },
+  { to: '/tertulia/escritos', label: 'Escritos', icon: Feather },
   { to: '/tertulia/amigos', label: 'Amigos', icon: Users, badge: 'requests' },
   { to: '/tertulia/avisos', label: 'Avisos', icon: Bell, badge: 'notifications' },
   { to: '/tertulia/ficha', label: 'Tu ficha', icon: UserRound },

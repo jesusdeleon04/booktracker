@@ -34,6 +34,7 @@ class SocialProfile(db.Model):
     show_authors = db.Column(db.String(8), nullable=False, default="friends")
     show_books = db.Column(db.String(8), nullable=False, default="friends")
     show_reading = db.Column(db.String(8), nullable=False, default="friends")
+    show_writings = db.Column(db.String(8), nullable=False, default="friends")  # friends | nobody (section of published writings)
     created_at = db.Column(db.DateTime, default=_now)
     updated_at = db.Column(db.DateTime, default=_now, onupdate=_now)
 
@@ -215,4 +216,66 @@ class SocialLookup(db.Model):
     __tablename__ = "social_lookups"
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    created_at = db.Column(db.DateTime, default=_now, index=True)
+
+
+class Publication(db.Model):
+    """A writing from the Writer's Studio published in the Tertulia.
+
+    Like a sent letter it is a frozen copy: title, text, category and cover are
+    copied when the author publishes, and only change when the author asks to
+    update the publication (`update_from_writing`) — editing the original in the
+    studio never touches what friends are reading. Audience: "private" (only the
+    author) or "friends" (accepted friends, checked on every request). Deleting
+    the original writing keeps the publication (source_writing_id becomes NULL).
+    """
+
+    __tablename__ = "publications"
+    id = db.Column(db.Integer, primary_key=True)
+    author_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    source_writing_id = db.Column(db.Integer, db.ForeignKey("studio_writings.id", ondelete="SET NULL"), index=True)
+    client_key = db.Column(db.String(64), nullable=False)
+    title = db.Column(db.String(300), nullable=False)
+    intro = db.Column(db.String(600))
+    content = db.Column(db.Text, nullable=False)
+    word_count = db.Column(db.Integer, default=0)
+    category_name = db.Column(db.String(80))
+    category_color = db.Column(db.String(20))
+    cover_data = db.Column(db.LargeBinary)
+    cover_mime = db.Column(db.String(40))
+    cover_width = db.Column(db.Integer)
+    cover_height = db.Column(db.Integer)
+    audience = db.Column(db.String(8), nullable=False, default="friends")  # private | friends
+    published_at = db.Column(db.DateTime, default=_now, index=True)  # first time it reached friends
+    updated_at = db.Column(db.DateTime)  # last time the author refreshed it from the writing
+    withdrawn_at = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=_now)
+    __table_args__ = (
+        db.UniqueConstraint("author_id", "client_key", name="uq_publication_once"),
+        db.CheckConstraint("audience in ('private', 'friends')", name="ck_publication_audience"),
+    )
+
+
+class PublicationReaction(db.Model):
+    """One discreet reaction per reader. Only the author sees who reacted."""
+
+    __tablename__ = "publication_reactions"
+    id = db.Column(db.Integer, primary_key=True)
+    publication_id = db.Column(db.Integer, db.ForeignKey("publications.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    reaction = db.Column(db.String(16), nullable=False)
+    created_at = db.Column(db.DateTime, default=_now)
+    __table_args__ = (db.UniqueConstraint("publication_id", "user_id", name="uq_publication_reaction"),)
+
+
+class PublicationComment(db.Model):
+    """A reply to the author. Each reader has a private thread with the author:
+    `thread_user_id` is the reader, `author_id` whoever wrote this message."""
+
+    __tablename__ = "publication_comments"
+    id = db.Column(db.Integer, primary_key=True)
+    publication_id = db.Column(db.Integer, db.ForeignKey("publications.id", ondelete="CASCADE"), nullable=False, index=True)
+    thread_user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    author_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    body = db.Column(db.String(1000), nullable=False)
     created_at = db.Column(db.DateTime, default=_now, index=True)

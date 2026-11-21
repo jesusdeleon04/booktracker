@@ -10,6 +10,8 @@ import { EmptyState, PageTitle, Segmented } from '../components/ui/Bits'
 import { ListFormDialog } from '../components/book/ListDialogs'
 import { STATUS, authorsLine, formatDate } from '../lib/format'
 import { fold } from '../lib/match'
+import { books as copy } from '../lib/copy'
+import ShareBookButton from '../components/social/ShareBookButton'
 
 const TABS = [
   { value: 'all', label: 'Todos' },
@@ -28,12 +30,7 @@ const SORTS = {
   year: { label: 'Año de publicación', fn: (a, b) => (b.year || 0) - (a.year || 0) },
 }
 
-const EMPTY_COPY = {
-  all: ['Tu biblioteca está esperando', 'Añade el libro que tienes en la mesilla, o el que te cambió la vida. Nosotros traemos la portada y los datos.'],
-  reading: ['Nada en curso', 'Cuando empieces un libro, márcalo como «Leyendo» y seguiremos tu progreso página a página.'],
-  read: ['Aún no hay lecturas terminadas', 'Los libros que termines aparecerán aquí, con tu calificación y tu reseña.'],
-  want: ['Tu lista de deseos está vacía', 'Guarda aquí lo que quieres leer. Descubrir está lleno de ideas.'],
-}
+const EMPTY_COPY = copy.library.empty
 
 export default function Library() {
   const [params, setParams] = useSearchParams()
@@ -102,14 +99,15 @@ export default function Library() {
   return (
     <div>
       <PageTitle
-        kicker={`${counts.all} libros · ${counts.read} leídos · ${counts.reading} en curso · ${counts.want} pendientes`}
+        kicker={copy.library.kicker(counts)}
+        sub={copy.library.sub}
         right={
           <button className="btn btn-primary" onClick={() => openPalette('add')}>
             <Plus size={16} /> Añadir libro
           </button>
         }
       >
-        Tu <em className="display-wonk">biblioteca</em>
+        {copy.library.title[0]} <em className="display-wonk">{copy.library.title[1]}</em>
       </PageTitle>
 
       <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -215,7 +213,8 @@ export default function Library() {
       ) : (
         <div className="divide-y divide-line overflow-hidden rounded-2xl border border-line">
           {filtered.map((b) => (
-            <Link key={b.id} to={`/libro/${b.id}`} className="flex items-center gap-4 bg-surface px-4 py-3 transition hover:bg-surface-2">
+            <div key={b.id} className="flex items-center gap-2 bg-surface pr-3 transition hover:bg-surface-2">
+            <Link to={`/libro/${b.id}`} className="flex min-w-0 flex-1 items-center gap-4 py-3 pl-4">
               <Cover book={b} compact className="w-11 shrink-0" />
               <div className="min-w-0 flex-1">
                 <p className="truncate font-display text-[17px]">{b.title}</p>
@@ -228,6 +227,8 @@ export default function Library() {
                 {STATUS[b.status].short}
               </span>
             </Link>
+            <ShareBookButton book={b} variant="icon" className="shrink-0" />
+            </div>
           ))}
         </div>
       )}

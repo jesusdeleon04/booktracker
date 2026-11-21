@@ -99,6 +99,7 @@ def _my_profile(user, profile):
             "showAuthors": profile.show_authors,
             "showBooks": profile.show_books,
             "showReading": profile.show_reading,
+            "showWritings": profile.show_writings,
         },
     }
 
@@ -140,13 +141,18 @@ def update_me():
         ids = [i for i in (data.get("favoriteBookIds") or []) if isinstance(i, int)][:8]
         books = {b.id: b for b in Book.query.filter(Book.user_id == user.id, Book.id.in_(ids)).all()} if ids else {}
         profile.favorite_books = [
-            {"bookId": b.id, "title": b.title, "authors": (b.authors or [])[:2], "coverUrl": b.cover_url, "year": b.year}
+            {"bookId": b.id, "title": b.title, "authors": (b.authors or [])[:2], "coverUrl": b.cover_url, "year": b.year,
+             "description": (b.description or "")[:500], "genres": (b.genres or [])[:3]}
             for b in (books.get(i) for i in ids) if b
         ]
     privacy = data.get("privacy") or {}
     for key, attr in (("discoverable", "discoverable"), ("emailLookup", "email_lookup")):
         if key in privacy:
             setattr(profile, attr, bool(privacy[key]))
+    if "showWritings" in privacy:
+        if privacy["showWritings"] not in ("friends", "nobody"):  # a writing is never more public than its audience
+            return fail("Valor de privacidad no válido.")
+        profile.show_writings = privacy["showWritings"]
     for key, attr in (("showGenres", "show_genres"), ("showAuthors", "show_authors"),
                       ("showBooks", "show_books"), ("showReading", "show_reading")):
         if key in privacy:
@@ -527,11 +533,43 @@ def _note(data):
     return (data.get("note") or "").strip()[:1000] or None
 
 
+def _catalog_snapshot(raw):
+    """Validated, in-memory Book-like record for sharing a catalog book (never saved to books)."""
+    from types import SimpleNamespace
+
+    def text(key, n):
+        v = raw.get(key)
+        return v.strip()[:n] if isinstance(v, str) and v.strip() else None
+
+    title = text("title", 400)
+    if not title:
+        return None
+    cover = text("coverUrl", 1000)
+    cid = text("id", 80) or ""
+    return SimpleNamespace(
+        title=title, subtitle=text("subtitle", 400), authors=[a[:200] for a in (raw.get("authors") or []) if isinstance(a, str)][:8],
+        description=(raw.get("description") or "")[:4000] if isinstance(raw.get("description"), str) else None,
+        cover_url=cover if cover and cover.startswith(("http://", "https://")) else None,
+        year=_int(raw.get("year")), publisher=text("publisher", 255), page_count=_int(raw.get("pageCount")),
+        isbn13=text("isbn13", 20), language=text("language", 10),
+        categories=[c[:80] for c in (raw.get("categories") or []) if isinstance(c, str)][:8],
+        genres=[g[:40] for g in (raw.get("genres") or []) if isinstance(g, str)][:8],
+        ol_work_key=cid[3:43] if cid.startswith("ol:") else None, google_id=cid[3:43] if cid.startswith("gb:") else None,
+        rating=None,
+    )
+
+
 @bp.post("/books")
 def share_book():
     user = S.require_social()
     data = _payload()
     book = Book.query.filter_by(id=_int(data.get("bookId")), user_id=user.id).first()
+    if not book and isinstance(data.get("book"), dict):
+        # A book from the catalog (search, recommendations) that isn't in the library
+        # yet: the share is a snapshot anyway, so nothing is added to the sender's shelves.
+        book = _catalog_snapshot(data["book"])
+        if book is None:
+            return fail("Faltan los datos del libro.")
     if not book:
         return fail("Ese libro no está en tu biblioteca.", 404)
     targets = _recipients(user, data.get("recipients"))

@@ -7,6 +7,7 @@ import { api } from '../lib/api'
 import { PageTitle, Spinner } from '../components/ui/Bits'
 import BookPage from '../components/ui/BookPage'
 import { ConfirmDialog } from '../components/ui/Dialog'
+import { books as copy } from '../lib/copy'
 
 const PURPOSES = [
   { key: 'pensar', label: 'Pensar' },
@@ -164,7 +165,7 @@ export default function Profile() {
   return (
     <div>
       <PageTitle kicker="Tu perfil lector">
-        Tu <em className="display-wonk">ADN</em> literario
+        {copy.profile.title[0]} <em className="display-wonk">{copy.profile.title[1]}</em>
       </PageTitle>
 
       {social && (
@@ -189,7 +190,7 @@ export default function Profile() {
           kicker="Tu arquetipo lector"
           title={arche.name}
           lead={arche.description}
-          footer={`Construido con ${taste?.signals || 0} señales · ${books.length} libros en tu biblioteca`}
+          footer={copy.profile.basedOn(taste?.signals || 0, books.length)}
         />
       )}
 
@@ -303,7 +304,7 @@ export default function Profile() {
           </div>
         </Panel>
 
-        <Panel kicker="Géneros favoritos" title="Tus mundos">
+        <Panel kicker={copy.profile.genresHead[0]} title={copy.profile.genresHead[1]}>
           <div className="flex flex-wrap gap-1.5">
             {meta.genres.map((g) => {
               const on = profile.genres.includes(g.key)

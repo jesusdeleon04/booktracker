@@ -12,6 +12,7 @@ import { RIGHTS_TONE, lifespan, poemPath } from '../../lib/poetry'
 import { fold } from '../../lib/match'
 import { usePoetry } from '../../store/usePoetry'
 import { useStore } from '../../store/useStore'
+import { poetry as copy } from '../../lib/copy'
 
 const SORTS = {
   recent: { label: 'Guardados recientemente', fn: (a, b) => b.savedAt.localeCompare(a.savedAt) },
@@ -263,9 +264,9 @@ export default function PoetryCollection() {
     <div>
       <header className="mb-8 grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
         <div>
-          <p className="kicker kicker-dusk mb-3">Biblioteca de poesía</p>
+          <p className="kicker kicker-dusk mb-3">{copy.kicker}</p>
           <motion.h1 initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} className="font-display text-[2.6rem] leading-[0.98] font-light md:text-[4.2rem]">
-            Mi colección de <em className="display-wonk">poesía</em>
+            {copy.collection.title[0]} <em className="display-wonk">{copy.collection.title[1]}</em>
           </motion.h1>
           <p className="mt-3 font-mono text-[13px] text-ink-2">
             {items.length} {items.length === 1 ? 'poema' : 'poemas'} · {favCount} favoritos · {items.reduce((n, i) => n + (i.notes?.length || 0), 0)} notas
@@ -333,7 +334,7 @@ export default function PoetryCollection() {
         </div>
       ) : !items.length ? (
         <EmptyState
-          title="Tu antología personal empieza aquí"
+          title={copy.collection.emptyTitle}
           action={
             <Link to="/poesia" className="btn btn-primary">
               Explorar la biblioteca

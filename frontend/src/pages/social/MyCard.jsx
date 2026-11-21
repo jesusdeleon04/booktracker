@@ -1,31 +1,30 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
-import { Eye, ImagePlus, Search, X } from 'lucide-react'
+import { Eye, ImagePlus } from 'lucide-react'
 import { SectionHead, Spinner } from '../../components/ui/Bits'
+import { ShelfEditor } from '../../components/social/FavoriteShelf'
+import { tertulia } from '../../lib/copy'
 import { Avatar } from '../../components/social/SocialBits'
 import { prepareCover } from '../../lib/poetryCloud'
 import { socialApi } from '../../lib/social'
-import { fold } from '../../lib/match'
 import { useStore } from '../../store/useStore'
 
+const shelfCopy = tertulia.shelf
 const LEVELS = { everyone: 'Todo el mundo', friends: 'Solo mis amigos', nobody: 'Nadie' }
 const FIELDS = [
   ['showGenres', 'Géneros favoritos'],
   ['showAuthors', 'Autores favoritos'],
-  ['showBooks', 'Libros que me acompañan'],
   ['showReading', 'Lo que estoy leyendo'],
 ]
 
 /** "Tu ficha": the public literary card and its privacy. */
 export default function MyCard() {
   const toast = useStore((s) => s.toast)
-  const books = useStore((s) => s.books)
   const [me, setMe] = useState(null)
   const [form, setForm] = useState(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [uploading, setUploading] = useState(false)
-  const [q, setQ] = useState('')
   const fileRef = useRef(null)
 
   useEffect(() => {
@@ -37,11 +36,6 @@ export default function MyCard() {
       })
       .catch((err) => setError(err.message))
   }, [])
-
-  const candidates = useMemo(() => {
-    const fq = fold(q)
-    return books.filter((b) => !form?.favoriteBookIds.includes(b.id) && (!fq || fold(`${b.title} ${b.authors.join(' ')}`).includes(fq))).slice(0, 8)
-  }, [books, q, form?.favoriteBookIds])
 
   if (error) return <p className="text-ink-2">No se pudo cargar tu ficha: {error}</p>
   if (!form)
@@ -81,7 +75,6 @@ export default function MyCard() {
     e.target.value = ''
     if (file) avatarAction(async () => socialApi.uploadAvatar(await prepareCover(file, 512)))
   }
-  const favs = form.favoriteBookIds.map((id) => books.find((b) => b.id === id)).filter(Boolean)
 
   return (
     <form onSubmit={save} className="mx-auto max-w-3xl">
@@ -145,35 +138,16 @@ export default function MyCard() {
       </section>
 
       <section className="mb-10">
-        <SectionHead kicker="Libros que te acompañan" title="Elige hasta ocho de tu biblioteca" />
-        {favs.length > 0 && (
-          <ul className="mb-4 flex flex-wrap gap-2">
-            {favs.map((b) => (
-              <li key={b.id} className="chip !cursor-default">
-                {b.title}
-                <button type="button" onClick={() => set({ favoriteBookIds: form.favoriteBookIds.filter((x) => x !== b.id) })} aria-label={`Quitar ${b.title}`}>
-                  <X size={13} />
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-        {form.favoriteBookIds.length < 8 && (
-          <div>
-            <div className="relative max-w-md">
-              <Search size={14} className="absolute top-1/2 left-3 -translate-y-1/2 text-ink-3" />
-              <input className="field h-10 pl-9" placeholder="Buscar en tu biblioteca" value={q} onChange={(e) => setQ(e.target.value)} />
-            </div>
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {candidates.map((b) => (
-                <button type="button" key={b.id} className="chip !h-8 text-[13px]" onClick={() => set({ favoriteBookIds: [...form.favoriteBookIds, b.id] })}>
-                  + {b.title}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-        <p className="mt-3 text-xs text-ink-3">
+        <SectionHead kicker={shelfCopy.kicker} title={shelfCopy.title} subtitle={shelfCopy.sub} />
+        <ShelfEditor
+          ids={form.favoriteBookIds}
+          onChange={(ids) => set({ favoriteBookIds: ids })}
+          visible={form.privacy.showBooks !== 'nobody'}
+          onVisible={(on) => setPrivacy({ showBooks: on ? 'friends' : 'nobody' })}
+          level={form.privacy.showBooks === 'everyone' ? 'everyone' : 'friends'}
+          onLevel={(level) => setPrivacy({ showBooks: level })}
+        />
+        <p className="mt-4 text-xs text-ink-3">
           Tus géneros y autores favoritos se editan en tu <Link to="/perfil" className="text-dusk underline">perfil lector</Link>.
         </p>
       </section>
@@ -194,6 +168,13 @@ export default function MyCard() {
             <span className="block text-sm text-ink-3">
               Tu correo{me.email ? <> (<span className="font-mono">{me.email}</span>)</> : null} nunca se muestra a nadie: solo lo ves tú. Sirve para que quien ya lo conoce pueda encontrarte.
             </span>
+          </span>
+        </label>
+        <label className="flex items-start gap-3 py-2">
+          <input type="checkbox" className="mt-1 accent-[var(--accent)]" checked={form.privacy.showWritings !== 'nobody'} onChange={(e) => setPrivacy({ showWritings: e.target.checked ? 'friends' : 'nobody' })} />
+          <span>
+            <span className="block font-medium">Mostrar «Lo que he escrito» en mi ficha</span>
+            <span className="block text-sm text-ink-3">Solo aparecen los escritos que hayas publicado para tus amigos. Los privados y los borradores nunca se muestran.</span>
           </span>
         </label>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">

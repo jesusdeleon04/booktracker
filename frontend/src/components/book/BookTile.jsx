@@ -3,6 +3,7 @@ import { motion } from 'motion/react'
 import Cover from './Cover'
 import Stars from '../ui/Stars'
 import { STATUS, authorsLine } from '../../lib/format'
+import ShareBookButton from '../social/ShareBookButton'
 
 /** Library book in a grid: cover-first, quiet metadata underneath. */
 export default function BookTile({ book, index = 0, showStatus = true, showRating = true }) {
@@ -41,6 +42,7 @@ export default function BookTile({ book, index = 0, showStatus = true, showRatin
           {showRating && book.rating != null && <Stars value={book.rating} size={12} className="mt-1.5" />}
         </div>
       </Link>
+      <ShareBookButton book={book} variant="tile" className="ml-0.5" />
     </motion.div>
   )
 }

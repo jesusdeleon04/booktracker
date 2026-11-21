@@ -17,7 +17,7 @@ from werkzeug.exceptions import HTTPException  # noqa: E402
 
 import config  # noqa: E402
 from models import db  # noqa: E402
-from routes import discover, letters, library, poetry, profile, social, studio  # noqa: E402
+from routes import discover, letters, library, poetry, profile, publications, social, studio  # noqa: E402
 
 
 def _add_missing_columns():
@@ -28,6 +28,7 @@ def _add_missing_columns():
         "studio_writings": {"client_key": "VARCHAR(64)", "inspiration": "TEXT"},
         "users": {"supabase_uid": "VARCHAR(40)", "email": "VARCHAR(255)"},
         "studio_images": {"data": "BLOB", "token": "VARCHAR(40)"},
+        "social_profiles": {"show_writings": "VARCHAR(8) NOT NULL DEFAULT 'friends'"},
     }
     insp = inspect(db.engine)
     with db.engine.begin() as conn:
@@ -73,6 +74,7 @@ def create_app(database_url=None):
     app.register_blueprint(poetry.bp)
     app.register_blueprint(social.bp)
     app.register_blueprint(letters.bp)
+    app.register_blueprint(publications.bp)
 
     with app.app_context():
         db.create_all()

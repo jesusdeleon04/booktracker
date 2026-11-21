@@ -279,7 +279,7 @@ function Welcome({ covers, name, setName, onStart, onSkip }) {
           Cuéntanos qué te hace <em className="display-wonk text-accent [text-shadow:0_0_40px_rgba(233,163,79,0.45)]">pasar páginas</em>.
         </motion.h1>
         <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }} className="mx-auto mt-5 max-w-md text-ink-2">
-          En dos minutos construimos tu perfil literario. Con él, cada recomendación tendrá una razón de ser.
+          Dos minutos y unas cuantas preguntas. Con tus respuestas, cada sugerencia podrá explicarte por qué está ahí.
         </motion.p>
         <motion.form
           initial={{ opacity: 0, y: 12 }}
@@ -337,10 +337,10 @@ function GenresStep({ meta, covers, selected, setSelected, onNext }) {
       kicker="Paso 1 · Géneros"
       title={
         <>
-          ¿Qué mundos <em className="display-wonk">te llaman</em>?
+          ¿Qué géneros <em className="display-wonk">te llaman</em>?
         </>
       }
-      sub="Elige al menos tres. Puedes elegir todos los que quieras: no hay respuestas equivocadas."
+      sub="Elige al menos tres, y todos los que quieras. Aquí no hay respuestas equivocadas."
       footer={
         <>
           <span className="text-sm text-ink-2">
@@ -668,17 +668,17 @@ function SwipeStep({ deck, meta, swipes, setSwipes, onNext }) {
             <div className="absolute inset-0 grid place-items-center rounded-[30px] border border-dashed border-line-strong text-center">
               <div>
                 <Spinner className="mx-auto mb-3 text-accent" size={22} />
-                <p className="font-display text-xl">Reuniendo libros para ti…</p>
-                <p className="mt-1 text-sm text-ink-3">Obras reales de tus géneros, desde Open Library.</p>
+                <p className="font-display text-xl">Reuniendo libros de tus géneros…</p>
+                <p className="mt-1 text-sm text-ink-3">Obras reales, sacadas de Open Library.</p>
               </div>
             </div>
           )}
           {deck && remaining.length === 0 && (
             <div className="absolute inset-0 grid place-items-center rounded-[30px] border border-dashed border-line-strong p-8 text-center">
               <div>
-                <p className="font-display text-3xl">¡Listo!</p>
+                <p className="font-display text-3xl">Eso es todo.</p>
                 <p className="mt-2 text-ink-2">
-                  {swipes.filter((s) => s.verdict !== 'dislike').length} libros te llamaron la atención. Ya sabemos bastante más de ti.
+                  {swipes.filter((s) => s.verdict !== 'dislike').length} libros te llamaron la atención. Con eso ya podemos afinar mucho más.
                 </p>
               </div>
             </div>
@@ -758,7 +758,7 @@ function FavoritesStep({ swipes, deck, authors, setAuthors, books, setBooks, add
           Autores que admiras, libros que <em className="display-wonk">te marcaron</em>.
         </>
       }
-      sub="Opcional, pero es la señal más fuerte para tus recomendaciones."
+      sub="Es opcional, pero es lo que más pesa a la hora de sugerirte libros."
       footer={
         <>
           <label className="flex cursor-pointer items-center gap-2 text-sm text-ink-2">
@@ -897,7 +897,7 @@ function Reveal({ finish, meta, name, onBack }) {
   const [data, setData] = useState(null)
   const [error, setError] = useState(null)
   const started = useRef(false)
-  const lines = ['Leyendo tus géneros…', 'Interpretando tus decisiones…', 'Conectando autores y temas…', 'Dando forma a tu perfil…']
+  const lines = ['Mirando tus géneros…', 'Sopesando tus respuestas…', 'Cruzando autores y temas…', 'Escribiendo tu perfil…']
   const [line, setLine] = useState(0)
 
   useEffect(() => {
@@ -918,7 +918,7 @@ function Reveal({ finish, meta, name, onBack }) {
     return (
       <div className="grid min-h-dvh place-items-center px-6 text-center">
         <div>
-          <p className="font-display text-3xl">Algo falló al guardar tu perfil</p>
+          <p className="font-display text-3xl">No hemos podido guardar tu perfil</p>
           <p className="mt-2 text-ink-2">{error}</p>
           <button className="btn btn-primary mt-6" onClick={onBack}>
             Volver

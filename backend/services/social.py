@@ -23,7 +23,7 @@ from sqlalchemy import and_, or_
 import config
 from models import Book, ReaderProfile, User, db
 from services.users import current_user
-from social_models import FriendLink, Notification, SocialProfile, UserBlock
+from social_models import FriendLink, Notification, Publication, SocialProfile, UserBlock
 
 VISIBILITY = ("everyone", "friends", "nobody")
 USERNAME_RE = re.compile(r"^[a-z0-9](?:[a-z0-9_.]{1,22})[a-z0-9]$")
@@ -34,6 +34,8 @@ LIMITS = {
     "friend_request": (40, timedelta(days=1)),
     "share": (120, timedelta(days=1)),
     "letter": (60, timedelta(days=1)),
+    "publication": (30, timedelta(days=1)),
+    "comment": (100, timedelta(days=1)),
     "email_lookup_hour": (10, timedelta(hours=1)),
     "email_lookup_day": (30, timedelta(days=1)),
 }
@@ -180,6 +182,57 @@ def require_friend(me, other_id):
     return other
 
 
+# ── publications (writings shared in the Tertulia) ────────────────────────
+
+
+def can_read_publication(pub, me_id):
+    """The one rule every publication route and listing goes through: the author
+    always; anyone else only while the publication is addressed to friends, it
+    has not been withdrawn, and they are an accepted, unblocked friend."""
+    if pub.author_id == me_id:
+        return True
+    return (pub.audience == "friends" and pub.withdrawn_at is None
+            and not blocked_between(me_id, pub.author_id) and are_friends(me_id, pub.author_id))
+
+
+def readable_publications(me_id, author_id=None, as_others_see=False):
+    """Publications `me` may read (optionally from one author), newest first.
+    `as_others_see` limits the author's own list to what friends can read."""
+    q = Publication.query
+    if author_id is not None and author_id != me_id:
+        if blocked_between(me_id, author_id) or not are_friends(me_id, author_id):
+            return q.filter(db.false())
+        q = q.filter(Publication.author_id == author_id)
+    elif author_id == me_id:
+        q = q.filter(Publication.author_id == me_id)
+    else:
+        allowed = friend_ids(me_id) - hidden_ids(me_id)
+        if not allowed:
+            return q.filter(db.false())
+        q = q.filter(Publication.author_id.in_(allowed))
+    if author_id != me_id or as_others_see:
+        q = q.filter(Publication.audience == "friends", Publication.withdrawn_at.is_(None))
+    return q.order_by(Publication.published_at.desc(), Publication.id.desc())
+
+
+def publication_preview(text, max_lines=6, max_chars=360):
+    """First lines of a text, keeping its line breaks (never reflowed into one paragraph)."""
+    text = (text or "").replace("\r\n", "\n")
+    out, size = [], 0
+    for line in text.split("\n"):
+        if not line.strip() and not out:
+            continue
+        if size + len(line) > max_chars:
+            out.append(line[: max(0, max_chars - size)].rstrip() + "…")
+            return "\n".join(out), True
+        out.append(line.rstrip())
+        size += len(line)
+        if len(out) >= max_lines:
+            break
+    preview = "\n".join(out).strip()
+    return preview, preview != text.strip()
+
+
 # ── cards ─────────────────────────────────────────────────────────────────
 
 
@@ -226,6 +279,36 @@ def person_card(me, user, profile=None, rel=None):
     }
 
 
+def reader_archetype(user, reader):
+    """The archetype name and description of `user` (derived from their own taste;
+    it never exposes titles, ratings or notes). Shown under the genres setting."""
+    from routes.common import library_dicts
+    from services.serializers import profile_to_dict
+    from services.taste import archetype, build_taste
+
+    if not (reader.genres or (reader.preferences or {}).get("purposes")):  # no answers: it would only be the default archetype
+        return None
+    try:
+        taste = build_taste(profile_to_dict(reader), library_dicts(user.id), [])
+        arche = archetype(taste)
+    except Exception:  # a missing archetype must never break a profile
+        return None
+    return {"name": arche.get("name"), "description": arche.get("description")} if arche else None
+
+
+def publication_card(pub):
+    """Light card for lists and profiles. Never carries the full text."""
+    preview, truncated = publication_preview(pub.content)
+    return {
+        "id": pub.id, "title": pub.title, "intro": pub.intro or "", "preview": preview, "truncated": truncated,
+        "category": {"name": pub.category_name, "color": pub.category_color} if pub.category_name else None,
+        "wordCount": pub.word_count, "audience": pub.audience, "hasCover": pub.cover_data is not None,
+        "publishedAt": pub.published_at.isoformat() + "Z" if pub.published_at else None,
+        "updatedAt": pub.updated_at.isoformat() + "Z" if pub.updated_at else None,
+        "withdrawn": pub.withdrawn_at is not None,
+    }
+
+
 def full_profile(me, user):
     """Public view of a profile, filtered by its privacy settings."""
     profile = ensure_profile(user)
@@ -244,6 +327,13 @@ def full_profile(me, user):
         card["authors"] = [a.get("name") for a in (reader.favorite_authors or []) if isinstance(a, dict) and a.get("name")][:12]
     if _visible(profile.show_books, is_friend, is_self):
         card["favoriteBooks"] = (profile.favorite_books or [])[:8]
+    if _visible(profile.show_genres, is_friend, is_self) and reader:
+        card["archetype"] = reader_archetype(user, reader)
+    if (is_self or is_friend) and profile.show_writings != "nobody":
+        rows = readable_publications(me.id, user.id, as_others_see=True).limit(12).all()
+        card["writings"] = [publication_card(r) for r in rows]
+    elif is_self:
+        card["writings"] = []
     if _visible(profile.show_reading, is_friend, is_self):
         reading = Book.query.filter_by(user_id=user.id, status="reading").order_by(Book.updated_at.desc()).limit(4).all()
         card["reading"] = [{"title": b.title, "authors": (b.authors or [])[:2], "coverUrl": b.cover_url} for b in reading]

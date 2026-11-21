@@ -6,6 +6,8 @@ import { Spinner } from '../../components/ui/Bits'
 import { ConfirmDialog } from '../../components/ui/Dialog'
 import Cover from '../../components/book/Cover'
 import { Avatar } from '../../components/social/SocialBits'
+import { BookShelf } from '../../components/social/FavoriteShelf'
+import PublicationCard from '../../components/social/PublicationCard'
 import { socialApi, when } from '../../lib/social'
 import { useSocial } from '../../store/useSocial'
 import { useStore } from '../../store/useStore'
@@ -125,52 +127,73 @@ export default function PersonPage() {
         )}
       </motion.header>
 
-      {p.genres?.length > 0 && (
-        <section className="mb-8">
-          <p className="kicker mb-3">Géneros favoritos</p>
-          <div className="flex flex-wrap gap-1.5">
-            {p.genres.map((g) => (
-              <span key={g.key} className="chip !cursor-default">
-                {g.label}
-              </span>
+      {p.archetype?.name && (
+        <motion.section initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} className="mb-12 text-center">
+          <p className="kicker mb-3">{p.name.split(' ')[0]} lee como…</p>
+          <h2 className="mx-auto max-w-xl font-display text-[2rem] leading-[1.05] font-medium tracking-[0.03em] text-balance md:text-[2.8rem]" style={{ fontVariant: 'small-caps' }}>
+            {p.archetype.name}
+          </h2>
+          {p.archetype.description && <p className="prose-book mx-auto mt-4 max-w-xl !text-[17px] italic">{p.archetype.description}</p>}
+        </motion.section>
+      )}
+
+      {p.favoriteBooks?.length > 0 && (
+        <section className="mb-12">
+          <p className="kicker mb-1">{rel === 'self' ? 'Tu estantería' : 'Su estantería'}</p>
+          <h2 className="mb-3 font-display text-2xl">{p.favoriteBooks.length === 1 ? 'El libro que le acompaña' : 'Libros que le acompañan'}</h2>
+          <BookShelf books={p.favoriteBooks} />
+        </section>
+      )}
+
+      {(p.genres?.length > 0 || p.authors?.length > 0) && (
+        <section className="mb-12 grid gap-8 sm:grid-cols-2">
+          {p.genres?.length > 0 && (
+            <div>
+              <p className="kicker mb-3">Géneros favoritos</p>
+              <div className="flex flex-wrap gap-1.5">
+                {p.genres.map((g) => (
+                  <span key={g.key} className="chip !cursor-default">
+                    {g.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          {p.authors?.length > 0 && (
+            <div>
+              <p className="kicker mb-3">Autores de cabecera</p>
+              <p className="font-serif text-[1.1rem] leading-relaxed italic">{p.authors.join(' · ')}</p>
+            </div>
+          )}
+        </section>
+      )}
+
+      {p.writings?.length > 0 && (
+        <section className="mb-12">
+          <p className="kicker mb-1">Escritos</p>
+          <h2 className="mb-4 font-display text-2xl">Lo que ha escrito</h2>
+          <div className="grid gap-5 sm:grid-cols-2">
+            {p.writings.map((w) => (
+              <PublicationCard key={w.id} pub={w} showAuthor={false} />
             ))}
           </div>
         </section>
       )}
-      {p.authors?.length > 0 && (
-        <section className="mb-8">
-          <p className="kicker mb-3">Autores de cabecera</p>
-          <p className="font-serif text-[1.1rem] italic">{p.authors.join(' · ')}</p>
-        </section>
-      )}
+
       {p.reading?.length > 0 && (
         <section className="mb-8">
           <p className="kicker mb-3">Leyendo ahora</p>
-          <ul className="grid grid-cols-3 gap-4 sm:grid-cols-4">
+          <ul className="grid grid-cols-4 gap-4 sm:grid-cols-6">
             {p.reading.map((b, i) => (
               <li key={i}>
                 <Cover book={b} compact />
-                <p className="mt-2 line-clamp-2 text-sm">{b.title}</p>
+                <p className="mt-2 line-clamp-2 text-xs">{b.title}</p>
               </li>
             ))}
           </ul>
         </section>
       )}
-      {p.favoriteBooks?.length > 0 && (
-        <section className="mb-8">
-          <p className="kicker mb-3">Libros que le acompañan</p>
-          <ul className="grid grid-cols-3 gap-4 sm:grid-cols-4">
-            {p.favoriteBooks.map((b, i) => (
-              <li key={i}>
-                <Cover book={b} compact />
-                <p className="mt-2 line-clamp-2 text-sm">{b.title}</p>
-                <p className="truncate text-xs text-ink-3">{(b.authors || []).join(', ')}</p>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-      {rel !== 'self' && rel !== 'friends' && !p.genres && !p.authors && !p.favoriteBooks && (
+      {rel !== 'self' && rel !== 'friends' && !p.genres && !p.authors && !p.favoriteBooks && !p.archetype && (
         <p className="text-center text-sm text-ink-3">El resto de su ficha solo lo ven sus amigos.</p>
       )}
       {rel === 'self' && (

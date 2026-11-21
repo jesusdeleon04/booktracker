@@ -13,6 +13,7 @@ import { useSection } from '../hooks/useDiscover'
 import { authorsLine, greeting, mastheadDate, plural } from '../lib/format'
 import { readThisYear } from '../lib/stats'
 import StringLights from '../components/ui/StringLights'
+import { books as copy, discover as discoverCopy } from '../lib/copy'
 
 function ReadingCard({ book, index }) {
   const updateBook = useStore((s) => s.updateBook)
@@ -45,7 +46,7 @@ function ReadingCard({ book, index }) {
                 size={22}
                 onChange={async (r) => {
                   await updateBook(book.id, { rating: r })
-                  toast('Calificación guardada.', { tone: 'success' })
+                  toast(copy.toasts.ratingSaved, { tone: 'success' })
                 }}
               />
             </div>
@@ -68,7 +69,7 @@ function ReadingCard({ book, index }) {
                   onClick={async () => {
                     await updateBook(book.id, { status: 'read' })
                     setJustFinished(true)
-                    toast(`¡«${book.title}» terminado!`, { tone: 'success' })
+                    toast(copy.toasts.finished(book.title), { tone: 'success' })
                   }}
                 >
                   <Check size={13} /> Terminado
@@ -93,11 +94,11 @@ function NextRead() {
   return (
     <section className="mb-16">
       <SectionHead
-        kicker="Elegido para ti"
-        title="Tu próxima lectura"
+        kicker={copy.home.next.kicker}
+        title={copy.home.next.title}
         action={
           <Link to="/descubrir" className="btn btn-sm">
-            Más ideas <ArrowRight size={14} />
+            {copy.home.next.more} <ArrowRight size={14} />
           </Link>
         }
       />
@@ -111,7 +112,7 @@ function NextRead() {
           </div>
         </div>
       ) : (
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)]">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)]">
           <button
             onClick={() => openPreview(pick, { reasons: pick.reasons })}
             className="group relative flex gap-5 overflow-hidden rounded-[26px] border border-line p-5 text-left"
@@ -122,7 +123,7 @@ function NextRead() {
             </div>
             <Cover book={pick} lift className="w-32 shrink-0" />
             <div className="min-w-0">
-              <p className="font-hand mb-1 text-[21px] leading-none text-accent">tu mejor coincidencia</p>
+              <p className="font-hand mb-1 text-[21px] leading-none text-accent">{discoverCopy.topPick}</p>
               <h3 className="font-display text-2xl leading-tight line-clamp-3 group-hover:text-accent">{pick.title}</h3>
               <p className="mt-1 text-sm text-ink-2">{authorsLine(pick.authors, 1)}</p>
               <p className="font-hand mt-3 text-[18px] leading-[1.15] text-ink-2 line-clamp-3">{pick.reasons[0]}</p>
@@ -173,15 +174,15 @@ export default function Home() {
             <span className="text-ink-2">
               {reading.length ? (
                 <>
-                  Tienes <em className="display-wonk text-ink">{reading.length === 1 ? 'un libro' : `${reading.length} libros`}</em> {reading.length === 1 ? 'abierto' : 'abiertos'}.
+                  {copy.home.headline.reading(reading.length).lead} <em className="display-wonk text-ink">{copy.home.headline.reading(reading.length).em}</em> {copy.home.headline.reading(reading.length).tail}
                 </>
               ) : books.length ? (
                 <>
-                  ¿Qué <em className="display-wonk text-ink">empezamos</em> hoy?
+                  {copy.home.headline.shelved.lead} <em className="display-wonk text-ink">{copy.home.headline.shelved.em}</em> {copy.home.headline.shelved.tail}
                 </>
               ) : (
                 <>
-                  Empecemos tu <em className="display-wonk text-ink">biblioteca</em>.
+                  {copy.home.headline.empty.lead} <em className="display-wonk text-ink">{copy.home.headline.empty.em}</em> {copy.home.headline.empty.tail}
                 </>
               )}
             </span>
@@ -202,7 +203,7 @@ export default function Home() {
           <div>
             <p className="kicker">Reto {year}</p>
             <p className="mt-1 max-w-[12rem] font-display text-lg leading-snug">
-              {yearCount >= goal ? '¡Reto cumplido! 🎉' : `Te faltan ${goal - yearCount} para tu meta anual.`}
+              {yearCount >= goal ? copy.home.challenge.done(yearCount) : copy.home.challenge.left(goal - yearCount)}
             </p>
           </div>
         </Link>
@@ -211,25 +212,25 @@ export default function Home() {
       {books.length === 0 && (
         <EmptyState
           className="mb-16"
-          title="Tu biblioteca empieza aquí"
+          title={copy.home.firstEmpty.title}
           action={
             <>
               <button className="btn btn-primary" onClick={() => openPalette('add')}>
-                <Plus size={16} /> Añadir mi primer libro
+                <Plus size={16} /> {copy.home.firstEmpty.add}
               </button>
               <Link to="/descubrir" className="btn">
-                <Compass size={16} /> Descubrir algo nuevo
+                <Compass size={16} /> {copy.home.firstEmpty.discover}
               </Link>
             </>
           }
         >
-          Busca por título, autor o ISBN: importamos la portada, la sinopsis y todos los datos por ti.
+          {copy.home.firstEmpty.body}
         </EmptyState>
       )}
 
       {reading.length > 0 && (
         <section className="mb-16">
-          <SectionHead kicker="En la mesilla" title="Leyendo ahora" />
+          <SectionHead kicker={copy.home.reading.kicker} title={copy.home.reading.title} />
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {reading.map((b, i) => (
               <ReadingCard key={b.id} book={b} index={i} />
@@ -243,7 +244,7 @@ export default function Home() {
       {want.length > 0 && (
         <section className="mb-16">
           <SectionHead
-            kicker={`${want.length} en espera`}
+            kicker={copy.home.wantKicker(want.length)}
             title="Quiero leer"
             action={
               <Link to="/biblioteca?tab=want" className="btn btn-sm">
@@ -264,8 +265,8 @@ export default function Home() {
       {recentRead.length > 0 && (
         <section className="mb-10">
           <SectionHead
-            kicker="Diario de lectura"
-            title="Terminados recientemente"
+            kicker={copy.home.recent.kicker}
+            title={copy.home.recent.title}
             action={
               <Link to="/biblioteca?tab=read" className="btn btn-sm">
                 Ver todos <ArrowRight size={14} />
@@ -286,7 +287,7 @@ export default function Home() {
         <div className="mt-6 flex items-center justify-between gap-4 rounded-[26px] border border-dashed border-line-strong p-6">
           <div className="flex items-center gap-4">
             <BookOpen className="text-ink-3" />
-            <p className="text-ink-2">¿Empezaste algo nuevo? Márcalo como «Leyendo» y sigue tu progreso aquí.</p>
+            <p className="text-ink-2">{copy.home.nothingOpen}</p>
           </div>
           <button className="btn btn-sm shrink-0" onClick={() => openPalette('add')}>
             <Plus size={14} /> Añadir
