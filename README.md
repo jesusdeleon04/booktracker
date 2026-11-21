@@ -166,6 +166,103 @@ Por defecto la app es de un único usuario local, como siempre. Con `BOOKTRACKER
 - Configuración en `frontend/.env.local`, que está en `.gitignore`. La plantilla es `frontend/.env.example`. Solo admite la clave **publicable** (`sb_publishable_…`); el módulo se niega a arrancar si recibe una clave secreta.
 - Servidor MCP de Supabase para Claude Code en `.mcp.json`, con alcance de proyecto y limitado a `project_ref=xoygqiwdvkpysiedeixr`. Hay que aprobarlo y autorizarlo una vez desde Claude Code (`/mcp`).
 
+## La Tertulia (amigos, obsequios y cartas)
+
+La parte social solo existe en modo multiusuario. En modo local la API responde 403 y la interfaz no la muestra. Es una comunidad privada, no una red social: no hay muro, ni seguidores, ni contadores públicos.
+
+| Sección | Ruta | Qué es |
+| --- | --- | --- |
+| Correspondencia | `/tertulia` | Cartas recibidas y enviadas, con filtro de sin abrir y leídas. |
+| Carta | `/tertulia/cartas/:id` | Vista inmersiva: el sobre con lacre se abre y la hoja sale. Queda fuera del marco de la app. |
+| Obsequios | `/tertulia/obsequios` | Libros recomendados y poemas compartidos, recibidos y enviados. |
+| Amigos | `/tertulia/amigos` | Solicitudes, amigos, buscador (nombre, @usuario o correo exacto) y bloqueos. |
+| Avisos | `/tertulia/avisos` | Notificaciones. También se ven desde la campana de la barra superior. |
+| Tu ficha | `/tertulia/ficha` | Nombre visible, @usuario, foto, presentación, libros favoritos y privacidad. |
+| Ficha de lector | `/tertulia/lector/:usuario` | Lo que otra persona deja ver de sí, y las acciones de relación con ella. |
+
+Puntos de entrada en la app:
+
+- **Libros:** botón «Recomendar» en la ficha de un libro.
+- **Poemas:** botón «Compartir» en el lector de poemas.
+- **Cartas:** botón «Enviar carta» en el editor del Writer's Studio. Las cartas se escriben con el mismo editor de máquina de escribir; no hay un editor aparte.
+
+### Tablas (`backend/social_models.py`, migración `supabase/migrations/20261121180000_tertulia.sql`)
+
+- **`social_profiles`:** @usuario único, nombre visible, presentación, avatar y preferencias de privacidad.
+  - Los datos de Google se guardan en campos aparte (`google_name`, `google_avatar_url`) y nunca pisan lo que el usuario escribió.
+  - Privacidad: `discoverable`, `email_lookup` y `show_genres|authors|books|reading`, cada una con el nivel `everyone`, `friends` o `nobody`.
+- **`friend_links`:** una fila por pareja.
+  - Restricciones: `user_low < user_high` y la pareja es única, así que no puede haber dos relaciones contradictorias.
+  - Estado `pending`, `accepted` o `declined`, más `requested_by`.
+- **`user_blocks`:** bloqueos (quién bloquea a quién).
+- **`shared_books`:** copia de la ficha del libro en el momento de recomendarlo, más la nota, la valoración, la reacción, la respuesta, si se guardó y la ocultación por cada parte.
+- **`shared_poems`:** referencia del poema y metadatos de derechos.
+  - El texto solo se guarda si el poema es libre en todas las jurisdicciones; una restricción `CHECK` lo impide en cualquier otro caso.
+- **`letters`:** la carta enviada.
+  - Es una copia congelada: contenido, asunto, papel, lacre y portada.
+  - El trigger `letters_immutable` impide cambiar el contenido; solo se puede marcar como oculta para quien la envió.
+- **`letter_recipients`:** un sobre por destinatario, con fecha de entrega, lectura y ocultación.
+- **`notifications`** y **`social_lookups`** (límite de búsquedas por correo).
+
+### Modelo de seguridad
+
+- **Acceso a la base de datos:**
+  - Todas las tablas sociales tienen RLS activado y ninguna política.
+  - Se han retirado los permisos de `anon` y `authenticated`, así que la API pública de Supabase no puede leerlas ni escribirlas.
+  - Solo el servidor Flask accede, conectado como propietario.
+  - Se ha comprobado con la clave publicable: lectura e inserción devuelven `42501`.
+- **Autorización:** cada regla se comprueba en el servidor (`backend/services/social.py`), nunca solo en el frontend:
+  - Amistad aceptada para compartir o escribir.
+  - Bloqueos en los dos sentidos.
+  - Destinatario y remitente de cada obsequio y cada carta.
+  - Visibilidad de cada campo de la ficha.
+- **Correos:**
+  - Nunca se muestran a otras personas; solo el propio usuario ve el suyo en su ficha.
+  - La búsqueda por correo exige la dirección exacta y que la otra persona lo permita.
+  - Ante cualquier fallo responde siempre el mismo 404, así que no sirve para averiguar si una cuenta existe.
+  - Límite: 10 búsquedas por hora y 30 al día.
+- **Límites diarios:**
+  - 40 solicitudes de amistad.
+  - 120 obsequios.
+  - 60 cartas, con un máximo de 10 destinatarios por carta.
+- **Envíos duplicados:**
+  - Cada envío lleva una `clientKey` (única por remitente), así que pulsar dos veces no duplica nada.
+  - Una segunda solicitud de amistad devuelve la que ya existe. Si la otra persona ya te había invitado, se acepta la suya.
+- **Imágenes:**
+  - Portadas de las cartas: se copian dentro de la carta y solo se sirven, con la sesión, a sus participantes.
+  - Fotos de perfil personalizadas: se sirven con una URL impredecible.
+  - No se usa `service_role` en ningún sitio del cliente.
+
+### Decisiones sobre integridad
+
+- **Quitar una amistad:**
+  - Los obsequios entre esas dos personas dejan de estar disponibles para quien los recibió (404). No se borran, por si la amistad vuelve.
+  - Las cartas ya entregadas siguen siendo correspondencia privada de cada uno.
+  - No se puede escribir ni compartir nada nuevo.
+- **Bloquear:**
+  - Termina la amistad y cancela las solicitudes pendientes.
+  - Esconde a cada uno de las búsquedas, fichas y avisos del otro.
+  - La persona bloqueada no recibe ningún aviso.
+- **Rechazar una solicitud:** quien la envió la sigue viendo como pendiente; no se le avisa del rechazo.
+- **Borrar una carta u obsequio:**
+  - Solo lo quita de la vista de quien lo borra.
+  - La fila desaparece cuando ya nadie la conserva.
+  - Nadie puede borrar la copia del otro.
+- **Borrar una cuenta:** la clave foránea pone `sender_id` a NULL. La carta conserva el nombre del remitente tal como era al enviarla y el destinatario la sigue teniendo.
+- **Contenido desaparecido:**
+  - Si se borra el libro original, el obsequio conserva su copia.
+  - Si se borra el borrador del estudio, la carta enviada sigue intacta.
+- **Acceso por URL directa:** a una carta u obsequio ajeno se responde 404, sin contenido.
+- **Avisos:** se consultan cada 60 segundos mientras la pestaña está visible y al volver a ella. No hay notificaciones push.
+
+### Pruebas
+
+- `backend/tests/test_social.py`: 14 escenarios con tres cuentas simuladas sobre SQLite temporal.
+  - Privacidad y correos, solicitudes sin duplicados, reciprocidad, bloqueos y límites.
+  - Obsequios y derechos de los poemas.
+  - Cartas inmutables y por destinatario, accesos ajenos, quitar amistad y borrar cuenta.
+- La prueba de extremo a extremo (dos navegadores, móvil y escritorio) usa un servidor aislado con tokens simulados y no toca Supabase.
+
 ## Notas
 
 - La versión anterior del proyecto («Biblioteca Intelectual Personal», con escritorio, ideas y canvas) se conserva intacta en `old_app/bip_v2/`.

@@ -51,7 +51,12 @@ def verify(token):
     if not uid:
         return None
     meta = data.get("user_metadata") or {}
-    info = {"uid": uid, "email": data.get("email"), "name": meta.get("full_name") or meta.get("name")}
+    info = {
+        "uid": uid,
+        "email": data.get("email"),
+        "name": meta.get("full_name") or meta.get("name"),
+        "picture": meta.get("avatar_url") or meta.get("picture"),
+    }
     with _lock:
         if len(_cache) > 500:
             _prune(now)

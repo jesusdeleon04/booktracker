@@ -17,7 +17,7 @@ from werkzeug.exceptions import HTTPException  # noqa: E402
 
 import config  # noqa: E402
 from models import db  # noqa: E402
-from routes import discover, library, poetry, profile, studio  # noqa: E402
+from routes import discover, letters, library, poetry, profile, social, studio  # noqa: E402
 
 
 def _add_missing_columns():
@@ -40,6 +40,23 @@ def _add_missing_columns():
                     conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {name} {ddl}"))
 
 
+def _lock_down_postgres():
+    """Safety net for hosted Postgres (Supabase): tables created by the app must
+    never be readable through Supabase's public Data API. The API server is the
+    only client of these tables; RLS on + no grants for anon/authenticated means
+    the browser-facing roles see nothing even if a migration forgot a table."""
+    if db.engine.dialect.name != "postgresql":
+        return
+    from sqlalchemy import text
+
+    with db.engine.begin() as conn:
+        roles = {r[0] for r in conn.execute(text("select rolname from pg_roles where rolname in ('anon', 'authenticated')"))}
+        for table in db.metadata.sorted_tables:
+            conn.execute(text(f'alter table public."{table.name}" enable row level security'))
+            if roles:
+                conn.execute(text(f'revoke all on public."{table.name}" from {", ".join(sorted(roles))}'))
+
+
 def create_app(database_url=None):
     app = Flask(__name__, static_folder=None)
     app.config["SQLALCHEMY_DATABASE_URI"] = database_url or config.DATABASE_URL
@@ -54,10 +71,13 @@ def create_app(database_url=None):
     app.register_blueprint(discover.bp)
     app.register_blueprint(studio.bp)
     app.register_blueprint(poetry.bp)
+    app.register_blueprint(social.bp)
+    app.register_blueprint(letters.bp)
 
     with app.app_context():
         db.create_all()
         _add_missing_columns()
+        _lock_down_postgres()
 
     @app.get("/api/config")
     def _public_config():
@@ -78,7 +98,7 @@ def create_app(database_url=None):
         path = request.path
         if not path.startswith("/api/"):
             return None
-        if path in ("/api/health", "/api/config") or path.startswith(("/api/poetry/", "/api/studio/media/")):
+        if path in ("/api/health", "/api/config") or path.startswith(("/api/poetry/", "/api/studio/media/", "/api/social/avatar/")):
             return None
         from services.users import current_user
 

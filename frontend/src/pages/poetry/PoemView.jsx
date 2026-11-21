@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { motion } from 'motion/react'
-import { ArrowLeft, Copy, Download, ExternalLink, Focus, Printer, RefreshCw, Settings2, Type, X } from 'lucide-react'
+import { ArrowLeft, Copy, Download, ExternalLink, Focus, Gift, Printer, RefreshCw, Settings2, Type, X } from 'lucide-react'
 import { Spinner } from '../../components/ui/Bits'
 import { Popover } from '../../components/studio/StudioBits'
 import { JurisdictionSelect, PoemText, Portrait, RightsBadge, SourceErrors, useJurisdiction } from '../../components/poetry/PoetryBits'
@@ -10,6 +10,8 @@ import WriteFromPoem from '../../components/poetry/WriteFromPoem'
 import { FONTS, PAPERS, READER_DEFAULTS, WIDTHS, authorPath, getReaderPrefs, lifespan, poetryApi, pubLine, quotation, saveReaderPrefs } from '../../lib/poetry'
 import { usePoetry } from '../../store/usePoetry'
 import { useStore } from '../../store/useStore'
+
+const ShareDialog = lazy(() => import('../../components/social/ShareDialog'))
 
 function ReaderSettings({ prefs, setPrefs }) {
   const [open, setOpen] = useState(false)
@@ -225,6 +227,8 @@ export default function PoemView() {
   const [prefs, setPrefsState] = useState(getReaderPrefs)
   const [focus, setFocus] = useState(false)
   const [retry, setRetry] = useState(0)
+  const social = useStore((s) => s.authRequired)
+  const [sharing, setSharing] = useState(false)
   const init = usePoetry((s) => s.init)
   const item = usePoetry((s) => s.items.find((i) => i.pid === id))
   const storedRef = useRef(null)
@@ -328,9 +332,19 @@ export default function PoemView() {
           )}
           {free && <PdfMenu rec={rec} />}
           <WriteFromPoem rec={rec} />
+          {social && !state.offline && (
+            <button className="btn" onClick={() => setSharing(true)} title="Compartir con tus amigos de la Tertulia">
+              <Gift size={16} /> Compartir
+            </button>
+          )}
           <SaveControl rec={rec} />
         </div>
       </div>
+      {sharing && (
+        <Suspense fallback={null}>
+          <ShareDialog open={sharing} onClose={() => setSharing(false)} kind="poem" item={rec} />
+        </Suspense>
+      )}
 
       {state.offline && (
         <div className="mb-5">

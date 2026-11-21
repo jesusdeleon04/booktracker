@@ -1,11 +1,13 @@
 import { useEffect } from 'react'
 import { Link, NavLink, useLocation, useNavigate, useOutlet } from 'react-router'
 import { AnimatePresence, motion } from 'motion/react'
-import { ChartColumn, Compass, Feather, House, Library, MoonStar, Plus, Search } from 'lucide-react'
+import { ChartColumn, Compass, Feather, House, Library, Mail, MoonStar, Plus, Search } from 'lucide-react'
 import { useStore } from '../../store/useStore'
+import { useSocial } from '../../store/useSocial'
 import BookPreview from '../book/BookPreview'
 import CommandPalette from '../search/CommandPalette'
 import { ManualAddDialog } from '../book/BookForm'
+import NotificationBell from '../social/NotificationBell'
 
 const NAV = [
   { to: '/', label: 'Inicio', icon: House, end: true },
@@ -13,9 +15,16 @@ const NAV = [
   { to: '/biblioteca', label: 'Biblioteca', icon: Library },
   { to: '/poesia', label: 'Poesía', icon: MoonStar },
   { to: '/estudio', label: 'Estudio', icon: Feather },
+  { to: '/tertulia', label: 'Tertulia', icon: Mail, social: true },
   { to: '/estadisticas', label: 'Estadísticas', short: 'Datos', icon: ChartColumn },
 ]
 const NAV_BY = Object.fromEntries(NAV.map((n) => [n.to, n]))
+
+/** Letters waiting to be opened or friends waiting for an answer. */
+function useTertuliaWaiting() {
+  const summary = useSocial((s) => s.summary)
+  return (summary.letters || 0) + (summary.requests || 0) > 0
+}
 
 export function Wordmark({ className = '' }) {
   return (
@@ -50,21 +59,34 @@ function Avatar() {
 
 function TopBar() {
   const openPalette = useStore((s) => s.openPalette)
+  const social = useStore((s) => s.authRequired)
+  const waiting = useTertuliaWaiting()
+  const nav = NAV.filter((n) => social || !n.social)
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-bg/75 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-[1320px] items-center gap-4 px-4 md:px-8">
         <Wordmark />
-        <nav className="ml-6 hidden items-center gap-0.5 lg:flex" aria-label="Principal">
-          {NAV.map((n) => (
+        <nav className={`hidden items-center gap-0.5 lg:flex ${social ? 'ml-2 xl:ml-6' : 'ml-6'}`} aria-label="Principal">
+          {nav.map((n) => (
             <NavLink
               key={n.to}
               to={n.to}
               end={n.end}
-              className={({ isActive }) => `relative px-3 py-2 text-sm font-medium transition-colors ${isActive ? 'text-ink' : 'text-ink-2 hover:text-ink'}`}
+              className={({ isActive }) =>
+                `relative py-2 text-sm font-medium transition-colors ${social ? 'px-2.5 xl:px-3' : 'px-3'} ${isActive ? 'text-ink' : 'text-ink-2 hover:text-ink'}`
+              }
             >
               {({ isActive }) => (
                 <>
-                  {n.label}
+                  {social && n.short ? (
+                    <>
+                      <span className="xl:hidden">{n.short}</span>
+                      <span className="hidden xl:inline">{n.label}</span>
+                    </>
+                  ) : (
+                    n.label
+                  )}
+                  {n.social && waiting && <span className="letter-unread-dot absolute top-1.5 right-0.5 h-1.5 w-1.5 rounded-full bg-accent" aria-label="Tienes algo esperando" />}
                   {isActive && <motion.span layoutId="nav-underline" className="absolute inset-x-3 -bottom-[17px] h-[2px] bg-accent" />}
                 </>
               )}
@@ -77,7 +99,7 @@ function TopBar() {
             className="hidden h-10 items-center gap-3 rounded-full border border-line bg-surface pr-2 pl-4 text-sm text-ink-3 transition hover:border-line-strong hover:text-ink-2 sm:flex"
           >
             <Search size={15} />
-            <span className="pr-6 md:hidden xl:inline">Buscar libros, autores, ISBN…</span>
+            <span className={`pr-6 whitespace-nowrap md:hidden ${social ? '2xl:inline' : 'xl:inline'}`}>Buscar libros, autores, ISBN…</span>
             <kbd className="rounded-md border border-line px-1.5 py-0.5 font-mono text-[10px] md:hidden lg:inline">Ctrl K</kbd>
           </button>
           <button onClick={() => openPalette('search')} className="btn btn-icon sm:hidden" aria-label="Buscar">
@@ -86,6 +108,7 @@ function TopBar() {
           <button onClick={() => openPalette('add')} className="btn btn-primary hidden md:inline-flex" aria-label="Añadir libro">
             <Plus size={16} /> <span className="md:hidden xl:inline">Añadir libro</span>
           </button>
+          {social && <NotificationBell />}
           <Avatar />
         </div>
       </div>
@@ -99,7 +122,10 @@ function MobileNav() {
   const { pathname } = useLocation()
   const inStudio = pathname.startsWith('/estudio')
   const inPoetry = pathname.startsWith('/poesia')
-  const items = [NAV_BY['/'], NAV_BY['/descubrir'], NAV_BY['/biblioteca'], null, NAV_BY['/poesia'], NAV_BY['/estudio'], NAV_BY['/estadisticas']]
+  const social = useStore((s) => s.authRequired)
+  const waiting = useTertuliaWaiting()
+  // With accounts, the last slot belongs to the Tertulia; statistics stay one tap away from Inicio and the profile.
+  const items = [NAV_BY['/'], NAV_BY['/descubrir'], NAV_BY['/biblioteca'], null, NAV_BY['/poesia'], NAV_BY['/estudio'], social ? NAV_BY['/tertulia'] : NAV_BY['/estadisticas']]
   return (
     <nav className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-line bg-bg/85 backdrop-blur-xl lg:hidden" aria-label="Principal móvil">
       <div className="mx-auto grid max-w-xl grid-cols-7 items-center px-1 pt-1.5">
@@ -113,7 +139,10 @@ function MobileNav() {
             >
               {({ isActive }) => (
                 <>
-                  <n.icon size={21} strokeWidth={isActive ? 2.2 : 1.7} />
+                  <span className="relative">
+                    <n.icon size={21} strokeWidth={isActive ? 2.2 : 1.7} />
+                    {n.social && waiting && <span className="letter-unread-dot absolute -top-0.5 -right-1 h-2 w-2 rounded-full bg-accent" aria-label="Tienes algo esperando" />}
+                  </span>
                   <span className="max-w-full truncate">{n.short || n.label}</span>
                 </>
               )}

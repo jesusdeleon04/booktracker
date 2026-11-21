@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { motion } from 'motion/react'
-import { Download, Moon, RotateCcw, Search, Sun, Trash2, Upload, X } from 'lucide-react'
+import { ChartColumn, Download, Mail, Moon, RotateCcw, Search, Sun, Trash2, Upload, X } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import { api } from '../lib/api'
 import { PageTitle, Spinner } from '../components/ui/Bits'
@@ -97,6 +97,7 @@ export default function Profile() {
   const setTheme = useStore((s) => s.setTheme)
   const toast = useStore((s) => s.toast)
   const boot = useStore((s) => s.boot)
+  const social = useStore((s) => s.authRequired)
   const [name, setName] = useState(profile.displayName)
   const [goal, setGoal] = useState(profile.readingGoal)
   const [prefs, setPrefs] = useState({ complexity: 0, length: 0, pace: 0, focus: 0, era: 0, purposes: [], language: 'es', ...profile.preferences })
@@ -165,6 +166,21 @@ export default function Profile() {
       <PageTitle kicker="Tu perfil lector">
         Tu <em className="display-wonk">ADN</em> literario
       </PageTitle>
+
+      {social && (
+        <div className="mb-6 flex flex-wrap items-center gap-3 rounded-[22px] border border-line bg-surface/60 px-5 py-4">
+          <Mail size={17} className="text-accent" />
+          <p className="min-w-0 flex-1 text-sm text-ink-2">
+            Tu nombre, tu foto y lo que enseñas a tus amigos se editan en tu ficha de la Tertulia.
+          </p>
+          <Link to="/tertulia/ficha" className="btn btn-sm">
+            Tu ficha
+          </Link>
+          <Link to="/estadisticas" className="btn btn-sm btn-ghost lg:hidden">
+            <ChartColumn size={14} /> Estadísticas
+          </Link>
+        </div>
+      )}
 
       {/* Archetype poster */}
       {arche && (

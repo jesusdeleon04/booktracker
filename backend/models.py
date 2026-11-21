@@ -208,3 +208,8 @@ class Writing(db.Model):
     created_at = db.Column(db.DateTime, default=_now)
     updated_at = db.Column(db.DateTime, default=_now)  # set explicitly (caret moves don't count)
     last_written_at = db.Column(db.DateTime, default=_now)  # last change to the text itself
+
+
+# Social tables live in their own module; importing it here registers them with the
+# same metadata (create_all, tests) wherever `models` is used.
+import social_models  # noqa: E402,F401

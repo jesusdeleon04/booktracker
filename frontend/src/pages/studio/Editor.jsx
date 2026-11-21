@@ -1,5 +1,5 @@
 import { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { AnimatePresence, motion } from 'motion/react'
 import {
   ArrowLeft,
@@ -8,6 +8,7 @@ import {
   Download,
   Image as ImageIcon,
   LoaderCircle,
+  Mail,
   Maximize2,
   MoonStar,
   Minimize2,
@@ -27,8 +28,10 @@ import { ConfirmDialog } from '../../components/ui/Dialog'
 import { clock, drafts, lastCategory, longDate, newClientKey, relativeTime, rememberCategory, studioApi, studioPrefs, textStats } from '../../lib/studio'
 import { authHeaders } from '../../lib/api'
 import { typewriter } from '../../lib/typewriterSound'
+import { lettersApi, when } from '../../lib/social'
 
 const AnthologyPanel = lazy(() => import('../../components/poetry/AnthologyPanel'))
+const SendLetterDialog = lazy(() => import('../../components/social/SendLetterDialog'))
 
 const FIELDS = ['title', 'content', 'description', 'categoryId', 'coverImageId']
 const SIZES = { s: 17, m: 19, l: 21 }
@@ -115,6 +118,15 @@ export default function StudioEditor() {
   const createCategory = useStudio((s) => s.createCategory)
   const removeWriting = useStudio((s) => s.removeWriting)
   const toast = useStore((s) => s.toast)
+  // Tertulia: any writing can be sent as a letter (multi-user mode only).
+  const social = useStore((s) => s.authRequired)
+  const senderName = useStore((s) => s.profile?.displayName || '')
+  const [params] = useSearchParams()
+  const letterMode = social && params.get('carta') === '1'
+  const letterTo = Number(params.get('para')) || null
+  const replyTo = Number(params.get('respuesta')) || null
+  const [letterOpen, setLetterOpen] = useState(false)
+  const [sentLetters, setSentLetters] = useState(null)
 
   const [doc, setDoc] = useState(null)
   const [cover, setCover] = useState(null)
@@ -515,6 +527,22 @@ export default function StudioEditor() {
     }
   }, [toggleFocus, writeLocalNow])
 
+  // ── letters sent from this draft (Tertulia) ────────────────────────────
+  const loadSentLetters = useCallback(() => {
+    if (!social || !idRef.current) return
+    lettersApi
+      .byWriting(idRef.current)
+      .then(setSentLetters)
+      .catch(() => setSentLetters([]))
+  }, [social])
+  useEffect(() => {
+    if (panelOpen) loadSentLetters()
+  }, [panelOpen, loadSentLetters])
+  const flushForLetter = useCallback(async () => {
+    writeLocalNow()
+    await saveRef.current()
+  }, [writeLocalNow])
+
   // ── typing ──────────────────────────────────────────────────────────────
   const onKeyDown = (e) => {
     setTyping(true)
@@ -622,6 +650,17 @@ export default function StudioEditor() {
           >
             <MoonStar size={16} />
           </button>
+          {social && (
+            <button
+              className={`btn btn-sm ${letterMode ? 'btn-primary' : ''}`}
+              onClick={() => setLetterOpen(true)}
+              disabled={isNew || phase !== 'ready'}
+              aria-label="Enviar como carta"
+              title={isNew ? 'Escribe algo primero: la carta sale de un borrador guardado' : 'Enviar este escrito como carta a tus amigos'}
+            >
+              <Mail size={15} /> <span className="hidden sm:inline">Enviar carta</span>
+            </button>
+          )}
           <button className={`btn btn-sm ${panelOpen ? 'bg-surface-2' : ''}`} onClick={() => setPanelOpen(!panelOpen)} aria-expanded={panelOpen}>
             <PanelRight size={15} /> <span className="hidden sm:inline">Detalles</span>
           </button>
@@ -697,6 +736,18 @@ export default function StudioEditor() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {letterMode && phase === 'ready' && (
+          <div className="studio-chrome mb-4 flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-surface/80 px-4 py-3 text-sm">
+            <Mail size={16} className="text-accent" />
+            <span className="min-w-0 flex-1">
+              {replyTo ? 'Estás respondiendo a una carta.' : 'Estás escribiendo una carta.'} Se guarda sola como borrador en tu estudio y solo sale cuando la selles.
+            </span>
+            <button className="btn btn-primary btn-sm" onClick={() => setLetterOpen(true)} disabled={isNew}>
+              Enviar carta
+            </button>
+          </div>
+        )}
 
         {phase === 'loading' || !doc ? (
           <div className="mt-10">
@@ -917,6 +968,31 @@ export default function StudioEditor() {
               </div>
             </dl>
 
+            {social && !isNew && (
+              <div className="mt-6 border-t border-line pt-5">
+                <p className="kicker mb-2">Enviado como carta</p>
+                {sentLetters === null ? (
+                  <p className="text-xs text-ink-3">Consultando…</p>
+                ) : sentLetters.length ? (
+                  <ul className="space-y-1.5 text-sm">
+                    {sentLetters.map((l) => (
+                      <li key={l.id}>
+                        <Link to={`/tertulia/cartas/${l.id}`} className="hover:underline">
+                          A {l.to.join(', ') || 'alguien que ya no está'}
+                        </Link>{' '}
+                        <span className="text-xs text-ink-3">· {when(l.sentAt)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-xs text-ink-3">Todavía no lo has enviado. Las cartas enviadas no cambian aunque sigas editando este borrador.</p>
+                )}
+                <button className="btn btn-sm mt-3" onClick={() => setLetterOpen(true)}>
+                  <Mail size={13} /> Enviar como carta
+                </button>
+              </div>
+            )}
+
             <div className="mt-6 flex flex-wrap gap-2 border-t border-line pt-5">
               <button className="btn btn-sm" onClick={download}>
                 <Download size={13} /> Descargar .txt
@@ -931,6 +1007,21 @@ export default function StudioEditor() {
         )}
       </AnimatePresence>
 
+      {social && letterOpen && (
+        <Suspense fallback={null}>
+          <SendLetterDialog
+            open={letterOpen}
+            onClose={() => setLetterOpen(false)}
+            writingId={idRef.current}
+            getDoc={() => docRef.current}
+            flush={flushForLetter}
+            preselect={letterTo ? [letterTo] : []}
+            replyTo={replyTo}
+            senderName={senderName}
+            onSent={loadSentLetters}
+          />
+        </Suspense>
+      )}
       <CoverPicker
         open={coverOpen}
         onClose={() => setCoverOpen(false)}

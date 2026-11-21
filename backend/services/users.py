@@ -49,6 +49,7 @@ def current_user():
             abort(503, description="No se pudo comprobar tu sesión con Supabase. Inténtalo de nuevo.")
         if not info:
             abort(401, description="Inicia sesión para continuar.")
+        g._bt_auth = info  # Google name / picture for the social profile
         user = User.query.filter_by(supabase_uid=info["uid"]).first()
         if user is None:
             try:

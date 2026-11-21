@@ -30,6 +30,14 @@ const PoemView = lazy(() => import('./pages/poetry/PoemView'))
 const PoetAuthor = lazy(() => import('./pages/poetry/PoetAuthor'))
 const PoetList = lazy(() => import('./pages/poetry/PoetList'))
 const PoetryCollection = lazy(() => import('./pages/poetry/PoetryCollection'))
+const Tertulia = lazy(() => import('./pages/social/Tertulia'))
+const Correspondence = lazy(() => import('./pages/social/Correspondence'))
+const LetterView = lazy(() => import('./pages/social/LetterView'))
+const Gifts = lazy(() => import('./pages/social/Gifts'))
+const Friends = lazy(() => import('./pages/social/Friends'))
+const Notices = lazy(() => import('./pages/social/Notices'))
+const MyCard = lazy(() => import('./pages/social/MyCard'))
+const PersonPage = lazy(() => import('./pages/social/PersonPage'))
 
 function Splash({ error, onRetry }) {
   return (
@@ -78,7 +86,14 @@ export default function App() {
   const authStatus = usePoetry((s) => s.auth.status)
   const userId = usePoetry((s) => s.auth.user?.id)
   useEffect(() => {
-    api.get('/config').then(setCfg).catch(() => setCfg({ authRequired: false }))
+    api
+      .get('/config')
+      .catch(() => ({ authRequired: false }))
+      .then((c) => {
+        // The Tertulia (friends, letters) only exists with real accounts.
+        useStore.setState({ authRequired: !!c.authRequired })
+        setCfg(c)
+      })
   }, [])
   useEffect(() => {
     if (cfg?.authRequired) usePoetry.getState().init()
@@ -119,6 +134,7 @@ export default function App() {
         <Route path="/bienvenida" element={<Onboarding />} />
         <Route path="/descubrir/inmersivo" element={<Feed />} />
         <Route path="/estudio/escrito/:id" element={<StudioEditor />} />
+        {cfg.authRequired && <Route path="/tertulia/cartas/:id" element={<LetterView />} />}
         <Route element={<AppShell />}>
           <Route index element={<Home />} />
           <Route path="descubrir" element={<Discover />} />
@@ -135,6 +151,16 @@ export default function App() {
           <Route path="poesia/autor/:qid" element={<PoetAuthor />} />
           <Route path="poesia/poetas" element={<PoetList />} />
           <Route path="poesia/coleccion" element={<PoetryCollection />} />
+          {cfg.authRequired && (
+            <Route path="tertulia" element={<Tertulia />}>
+              <Route index element={<Correspondence />} />
+              <Route path="obsequios" element={<Gifts />} />
+              <Route path="amigos" element={<Friends />} />
+              <Route path="avisos" element={<Notices />} />
+              <Route path="ficha" element={<MyCard />} />
+              <Route path="lector/:username" element={<PersonPage />} />
+            </Route>
+          )}
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

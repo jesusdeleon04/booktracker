@@ -906,3 +906,203 @@ input[type="range"].slider::-moz-range-thumb {
     display: none !important;
   }
 }
+
+/* ═════════════════════════════════════════════════════════════════════════
+   Tertulia — correspondence: stationery, envelopes, wax seals, postmarks
+   ═════════════════════════════════════════════════════════════════════════ */
+@layer components {
+  /* Stationery: re-scope the typed-sheet colours used by .manuscript / .typed. */
+  .letter-marfil {
+    --sheet: #f3e9d4;
+    --typed: #2a1f17;
+  }
+  .letter-verjurado {
+    --sheet: #eee5cf;
+    --typed: #2b2118;
+    background-image:
+      repeating-linear-gradient(90deg, rgba(120, 90, 50, 0.06) 0 1px, transparent 1px 3px),
+      repeating-linear-gradient(90deg, transparent 0 62px, rgba(120, 90, 50, 0.1) 62px 63px),
+      radial-gradient(130% 100% at 50% 40%, transparent 60%, rgba(120, 85, 40, 0.16) 100%) !important;
+  }
+  .letter-aerograma {
+    --sheet: #e3ebf3;
+    --typed: #1d2a3d;
+    --ribbon: #b3322a;
+    box-shadow:
+      inset 0 0 0 10px #e3ebf3,
+      inset 0 0 0 16px transparent,
+      0 40px 80px -40px rgba(0, 0, 0, 0.85),
+      0 4px 14px rgba(0, 0, 0, 0.35);
+    background-image:
+      repeating-linear-gradient(135deg, #b3322a 0 14px, #e3ebf3 14px 20px, #2f5491 20px 34px, #e3ebf3 34px 40px) !important;
+    background-clip: border-box;
+  }
+  .letter-aerograma > .letter-body {
+    background: #e3ebf3;
+  }
+  .letter-sepia {
+    --sheet: #e8d6b2;
+    --typed: #3a2513;
+    background-image:
+      radial-gradient(130% 100% at 50% 40%, transparent 50%, rgba(110, 70, 25, 0.28) 100%) !important;
+  }
+  .letter-noche {
+    --sheet: #1b2335;
+    --typed: #ece5d4;
+    --ribbon: #e9b56a;
+    background-image:
+      radial-gradient(80% 45% at 50% 0%, rgba(147, 171, 212, 0.2), transparent 70%) !important;
+  }
+  .letter-noche .typed {
+    text-shadow: 0 0 0.6px rgba(236, 229, 212, 0.35);
+  }
+
+  /* The envelope (list + opening). --env is the paper of the envelope. */
+  .envelope {
+    --env: #eadcc0;
+    --env-dark: #d8c6a2;
+    position: relative;
+    aspect-ratio: 16 / 10;
+    border-radius: 6px;
+    background:
+      linear-gradient(160deg, rgba(255, 255, 255, 0.35), transparent 40%),
+      var(--env);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.4) inset,
+      0 18px 34px -18px rgba(0, 0, 0, 0.8),
+      0 2px 6px rgba(0, 0, 0, 0.25);
+    color: #2a1f17;
+    overflow: hidden;
+  }
+  /* The two side folds and the bottom fold, drawn with gradients. */
+  .envelope::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(to top right, transparent 49.6%, rgba(60, 40, 22, 0.08) 50%, transparent 50.4%) left / 50% 100% no-repeat,
+      linear-gradient(to top left, transparent 49.6%, rgba(60, 40, 22, 0.08) 50%, transparent 50.4%) right / 50% 100% no-repeat;
+    pointer-events: none;
+  }
+  .envelope-flap {
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 58%;
+    background: linear-gradient(180deg, var(--env-dark), var(--env));
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+    transform-origin: top;
+    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.15));
+    z-index: 2;
+  }
+  .envelope[data-open="true"] .envelope-flap {
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+    opacity: 0.55;
+  }
+  .envelope-aerograma {
+    --env: #e3ebf3;
+    --env-dark: #cdd9e6;
+    box-shadow:
+      inset 0 0 0 6px transparent,
+      0 18px 34px -18px rgba(0, 0, 0, 0.8);
+    background:
+      linear-gradient(#e3ebf3, #e3ebf3) padding-box,
+      repeating-linear-gradient(135deg, #b3322a 0 10px, #e3ebf3 10px 14px, #2f5491 14px 24px, #e3ebf3 24px 28px) border-box;
+    border: 6px solid transparent;
+  }
+  .envelope-sepia {
+    --env: #e2cca2;
+    --env-dark: #ccb07e;
+  }
+  .envelope-noche {
+    --env: #26304a;
+    --env-dark: #1c2438;
+    color: #ece5d4;
+  }
+  .envelope-verjurado {
+    --env: #ece2cb;
+    --env-dark: #dccdae;
+  }
+
+  /* Wax seal: a soft irregular disc with an embossed monogram. */
+  .wax-seal {
+    --wax: #9e2b25;
+    display: grid;
+    place-items: center;
+    border-radius: 47% 53% 50% 50% / 52% 48% 52% 48%;
+    background:
+      radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.28), transparent 45%),
+      radial-gradient(circle at 60% 70%, rgba(0, 0, 0, 0.25), transparent 55%),
+      var(--wax);
+    box-shadow:
+      0 2px 0 rgba(0, 0, 0, 0.2),
+      0 6px 14px -4px rgba(0, 0, 0, 0.55),
+      inset 0 0 0 3px rgba(0, 0, 0, 0.12),
+      inset 0 0 0 6px rgba(255, 255, 255, 0.06);
+    color: rgba(255, 240, 220, 0.85);
+    font-family: var(--font-display);
+    font-weight: 600;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.35);
+    user-select: none;
+  }
+  .wax-azul {
+    --wax: #2c4a78;
+  }
+  .wax-verde {
+    --wax: #3d6647;
+  }
+  .wax-oro {
+    --wax: #a8812f;
+  }
+
+  /* Postage stamp with perforated edge. */
+  .post-stamp {
+    position: relative;
+    display: grid;
+    place-items: center;
+    background: #f7efe0;
+    padding: 4px;
+    /* perforated edge only: holes along the border, solid paper inside */
+    -webkit-mask:
+      radial-gradient(circle 2.5px, transparent 96%, #000) -3.5px -3.5px / 7px 7px round,
+      linear-gradient(#000 0 0) content-box;
+    mask:
+      radial-gradient(circle 2.5px, transparent 96%, #000) -3.5px -3.5px / 7px 7px round,
+      linear-gradient(#000 0 0) content-box;
+  }
+  .post-stamp > span {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    border: 1px solid rgba(60, 40, 22, 0.35);
+  }
+  .postmark {
+    position: absolute;
+    border: 1.5px solid currentColor;
+    border-radius: 999px;
+    opacity: 0.45;
+    font-family: var(--font-mono);
+    font-size: 8.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    line-height: 1.25;
+    transform: rotate(-12deg);
+  }
+  .handwritten {
+    font-family: var(--font-hand);
+  }
+
+  .letter-unread-dot {
+    box-shadow: 0 0 0 4px var(--accent-soft);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .envelope-flap,
+  .wax-seal {
+    transition: none !important;
+  }
+}
