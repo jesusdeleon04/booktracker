@@ -268,6 +268,135 @@ export async function buildPoemPdf(rec, styleKey = 'clasico') {
   return doc.save()
 }
 
+/**
+ * PDF (A5) of one of the user's own writings, with an optional header line at the
+ * top of every page and an optional signature/footer at the end of the text.
+ */
+export async function buildWritingPdf({ title, content, header = '', footer = '', author = '' }, styleKey = 'clasico') {
+  const st = PDF_STYLES[styleKey] || PDF_STYLES.clasico
+  const doc = await PDFDocument.create()
+  doc.registerFontkit(fontkit)
+  const [titleF, titleItalic, body, italic] = await Promise.all(
+    [st.fonts.title, st.fonts.titleItalic, st.fonts.body, st.fonts.italic].map(async (u) => doc.embedFont(await fontBytes(u), { subset: false })),
+  )
+  const supported = new Set(body.getCharacterSet())
+  const all = `${title}${content}${header}${footer}`
+  const missing = [...new Set([...all].filter((c) => c.trim() && !supported.has(c.codePointAt(0))))]
+  if (missing.length) throw new UnsupportedScriptError(`Caracteres no disponibles en la tipografía: ${missing.slice(0, 6).join(' ')}`)
+
+  const ink = hex(st.ink)
+  const soft = hex(st.soft)
+  const accent = hex(st.accent)
+  const measure = PAGE.w - M.left - M.right
+  const size = st.bodySize
+  const lh = size * st.leading
+  const bottom = M.bottom + 10
+  const pages = []
+  let page
+  let y
+  const hdr = sanitize(header).trim()
+
+  const newPage = () => {
+    page = doc.addPage([PAGE.w, PAGE.h])
+    page.drawRectangle({ x: 0, y: 0, width: PAGE.w, height: PAGE.h, color: hex(st.bg) })
+    if (styleKey === 'mecanografiado') {
+      page.drawLine({ start: { x: M.left - 16, y: 0 }, end: { x: M.left - 16, y: PAGE.h }, thickness: 0.4, color: hex('#c98f7d'), opacity: 0.5 })
+    }
+    if (hdr) {
+      const hs = 8.2
+      const line = wrap(hdr, italic, hs, measure)[0]
+      const w = italic.widthOfTextAtSize(line, hs)
+      page.drawText(line, { x: (PAGE.w - w) / 2, y: PAGE.h - 34, size: hs, font: italic, color: soft })
+    }
+    pages.push(page)
+    y = PAGE.h - M.top
+  }
+  const draw = (s, { font = body, sz = size, color = ink, align = 'left', x = M.left } = {}) => {
+    const w = font.widthOfTextAtSize(s, sz)
+    const px = align === 'center' ? (PAGE.w - w) / 2 : align === 'right' ? PAGE.w - M.right - w : x
+    page.drawText(s, { x: px, y, size: sz, font, color })
+  }
+
+  newPage()
+  const tAlign = st.align
+  const titleText = sanitize(st.upperTitle ? (title || '').toUpperCase() : title || '')
+  if (titleText.trim()) {
+    for (const l of wrap(titleText, titleF, st.titleSize, measure)) {
+      draw(l, { font: titleF, sz: st.titleSize, align: tAlign })
+      y -= st.titleSize * 1.18
+    }
+    y -= 8
+    if (styleKey === 'clasico') {
+      const cx = PAGE.w / 2
+      page.drawLine({ start: { x: cx - 46, y: y + 3 }, end: { x: cx - 8, y: y + 3 }, thickness: 0.5, color: accent })
+      page.drawLine({ start: { x: cx + 8, y: y + 3 }, end: { x: cx + 46, y: y + 3 }, thickness: 0.5, color: accent })
+      page.drawRectangle({ x: cx - 2.6, y: y + 0.4, width: 5.2, height: 5.2, color: accent, rotate: degrees(45) })
+    } else if (styleKey === 'moderno') {
+      page.drawRectangle({ x: M.left, y: y + 2, width: 34, height: 2, color: accent })
+    } else {
+      draw('* * *', { color: accent })
+    }
+    y -= 28
+  }
+
+  const spaceW = body.widthOfTextAtSize(' ', size)
+  for (const raw of sanitize(content).replace(/\r\n?/g, '\n').split('\n')) {
+    if (!raw.trim()) {
+      y -= lh * 0.75
+      continue
+    }
+    const m = /^( *)(.*)$/.exec(raw)
+    const indent = Math.min(m[1].length * spaceW * 0.9, measure * 0.4)
+    wrap(m[2], body, size, measure - indent).forEach((p, i) => {
+      if (y < bottom) newPage()
+      draw(p, { x: M.left + indent + (i ? size * 1.6 : 0) })
+      y -= lh
+    })
+  }
+
+  // signature / footer
+  const sig = sanitize(footer).trim()
+  if (sig) {
+    const ss = size - 0.4
+    const sigLines = sig.split('\n').flatMap((l) => wrap(l, italic, ss, measure))
+    const need = sigLines.length * ss * 1.5 + 30
+    y -= lh * 0.8
+    if (y - need < bottom - 10) newPage()
+    page.drawLine({ start: { x: PAGE.w - M.right - 40, y: y + 8 }, end: { x: PAGE.w - M.right, y: y + 8 }, thickness: 0.5, color: accent })
+    y -= 8
+    for (const l of sigLines) {
+      draw(l, { font: italic, sz: ss, color: accent, align: 'right' })
+      y -= ss * 1.5
+    }
+  }
+
+  pages.forEach((p, i) => {
+    const label = String(i + 1)
+    const w = italic.widthOfTextAtSize(label, 8.5)
+    p.drawText(label, { x: (PAGE.w - w) / 2, y: 30, size: 8.5, font: italic, color: soft })
+  })
+  doc.setTitle(title || 'Escrito')
+  if (author) doc.setAuthor(author)
+  doc.setCreator('BookTracker · Writer\'s Studio')
+  doc.setProducer('BookTracker (pdf-lib)')
+  return doc.save()
+}
+
+export async function downloadWritingPdf(data, styleKey) {
+  const bytes = await buildWritingPdf(data, styleKey)
+  const blob = new Blob([bytes], { type: 'application/pdf' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  const name = (data.title || 'escrito').replace(/[\\/:*?"<>|]+/g, '').trim().slice(0, 80) || 'escrito'
+  a.download = `${name}.pdf`
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 4000)
+  return blob.size
+}
+
 export function pdfFileName(rec) {
   const clean = (s) => (s || '').normalize('NFKD').replace(/[̀-ͯ]/g, '').replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, ' ')
   return `${clean(rec.title).slice(0, 60) || 'poema'}${rec.author?.name ? ` - ${clean(rec.author.name)}` : ''}.pdf`

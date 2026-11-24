@@ -25,7 +25,7 @@ import { useStudio } from '../../store/useStudio'
 import { useStore } from '../../store/useStore'
 import { CategoryList, CategoryStamp, Popover, WritingCover } from '../../components/studio/StudioBits'
 import CoverPicker from '../../components/studio/CoverPicker'
-import { ConfirmDialog } from '../../components/ui/Dialog'
+import { ConfirmDialog, Dialog } from '../../components/ui/Dialog'
 import { clock, drafts, lastCategory, longDate, newClientKey, relativeTime, rememberCategory, studioApi, studioPrefs, textStats } from '../../lib/studio'
 import { authHeaders } from '../../lib/api'
 import { typewriter } from '../../lib/typewriterSound'
@@ -111,6 +111,77 @@ function Toggle({ label, hint, checked, onChange }) {
   )
 }
 
+function PdfDialog({ open, onClose, getDoc, author }) {
+  const toast = useStore((s) => s.toast)
+  const [styles, setStyles] = useState(null)
+  const [style, setStyle] = useState('clasico')
+  const [header, setHeader] = useState('')
+  const [footer, setFooter] = useState('')
+  const [busy, setBusy] = useState(false)
+  useEffect(() => {
+    if (open && !styles) import('../../lib/poemPdf').then((m) => setStyles(m.PDF_STYLES))
+  }, [open, styles])
+  const go = async () => {
+    setBusy(true)
+    try {
+      const d = getDoc()
+      const { downloadWritingPdf } = await import('../../lib/poemPdf')
+      const size = await downloadWritingPdf({ title: d.title || '', content: d.content || '', header, footer, author }, style)
+      toast(`PDF listo (${Math.max(1, Math.round(size / 1024))} KB).`)
+      onClose()
+    } catch (err) {
+      toast(`No se pudo crear el PDF: ${err.message}`, { tone: 'error' })
+    } finally {
+      setBusy(false)
+    }
+  }
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      title="Descargar como PDF"
+      width="max-w-md"
+      footer={
+        <>
+          <button className="btn" onClick={onClose}>
+            Cancelar
+          </button>
+          <button className="btn btn-ink" onClick={go} disabled={busy}>
+            <Download size={14} /> Descargar
+          </button>
+        </>
+      }
+    >
+      <div className="space-y-4">
+        <label className="block">
+          <span className="text-sm font-medium">Encabezado <span className="text-ink-3 font-normal">(opcional)</span></span>
+          <input className="field mt-1 w-full" value={header} maxLength={120} onChange={(e) => setHeader(e.target.value)} placeholder="Aparece arriba en cada página" />
+        </label>
+        <label className="block">
+          <span className="text-sm font-medium">Pie de página / firma <span className="text-ink-3 font-normal">(opcional)</span></span>
+          <textarea className="field mt-1 w-full" rows={3} value={footer} maxLength={300} onChange={(e) => setFooter(e.target.value)} placeholder="Tu nombre, lugar, fecha…" />
+        </label>
+        {styles && (
+          <div>
+            <span className="text-sm font-medium">Estilo</span>
+            <div className="mt-1 space-y-1">
+              {Object.entries(styles).map(([k, s]) => (
+                <label key={k} className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 ${style === k ? 'border-ink' : 'border-line'}`}>
+                  <input type="radio" name="pdf-style" checked={style === k} onChange={() => setStyle(k)} className="mt-1" />
+                  <span>
+                    <span className="block font-medium">{s.label}</span>
+                    <span className="block text-xs text-ink-3">{s.hint}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </Dialog>
+  )
+}
+
 export default function StudioEditor() {
   const { id: routeId } = useParams()
   const navigate = useNavigate()
@@ -129,6 +200,7 @@ export default function StudioEditor() {
   const letterTo = Number(params.get('para')) || null
   const replyTo = Number(params.get('respuesta')) || null
   const [letterOpen, setLetterOpen] = useState(false)
+  const [pdfOpen, setPdfOpen] = useState(false)
   const [publishOpen, setPublishOpen] = useState(false)
   const [sentLetters, setSentLetters] = useState(null)
 
@@ -1012,6 +1084,9 @@ export default function StudioEditor() {
               <button className="btn btn-sm" onClick={download}>
                 <Download size={13} /> Descargar .txt
               </button>
+              <button className="btn btn-sm" onClick={() => setPdfOpen(true)}>
+                <Download size={13} /> Descargar PDF
+              </button>
               {!isNew && (
                 <button className="btn btn-sm btn-ghost text-[var(--ember)]" onClick={() => setConfirmDelete(true)}>
                   <Trash2 size={13} /> Eliminar escrito
@@ -1055,6 +1130,7 @@ export default function StudioEditor() {
           await saveRef.current()
         }}
       />
+      <PdfDialog open={pdfOpen} onClose={() => setPdfOpen(false)} getDoc={() => docRef.current} author={senderName} />
       <ConfirmDialog
         open={confirmDelete}
         onClose={() => setConfirmDelete(false)}
