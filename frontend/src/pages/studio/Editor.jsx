@@ -37,7 +37,7 @@ const SendLetterDialog = lazy(() => import('../../components/social/SendLetterDi
 const PublishDialog = lazy(() => import('../../components/social/PublishDialog'))
 
 const FIELDS = ['title', 'content', 'description', 'categoryId', 'coverImageId']
-const SIZES = { s: 17, m: 19, l: 21 }
+const SIZES = { xxs: 13, xs: 15, s: 17, m: 19, l: 21 }
 const LINE = 1.85
 
 const pick = (w) => ({
@@ -701,7 +701,7 @@ export default function StudioEditor() {
             </button>
             <Popover open={settingsOpen} onClose={() => setSettingsOpen(false)} align="right" className="w-72 p-2">
               <p className="kicker px-3 pt-1 pb-2">Tamaño de la letra</p>
-              <div className="mb-2 grid grid-cols-3 gap-1 px-2">
+              <div className="mb-2 grid grid-cols-5 gap-1 px-2">
                 {Object.entries(SIZES).map(([k, px]) => (
                   <button key={k} onClick={() => setPrefs({ size: k })} className={`rounded-lg py-1.5 font-mono transition ${prefs.size === k ? 'bg-ink text-bg' : 'hover:bg-surface-2'}`} style={{ fontSize: px - 4 }}>
                     Aa
